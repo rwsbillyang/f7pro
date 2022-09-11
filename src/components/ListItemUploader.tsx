@@ -3,9 +3,11 @@ import React from 'react';
 //https://github.com/mavedev/react-file-picker
 //Bug: extension若只是指定扩展名，android提示没有对应的应用打开，iOS没有问题；
 //使用image/*，android和iOS都正常，但FilePicker对扩展名校验出错。因此使用image/*加扩展名的方式
-import FilePicker, { InputErrorCode } from '@mavedev/react-file-picker';
+//import FilePicker, { InputErrorCode } from '@mavedev/react-file-picker';
 import { f7, ListItem, SwipeoutActions, SwipeoutButton } from 'framework7-react';
 import { UploaderProps } from '../datatype/UploaderProps';
+import { InputErrorCode } from '../filepicker/InputError';
+import FilePicker from '../filepicker/FilePicker';
 
 
 
@@ -28,8 +30,6 @@ export const ListItemUploader: React.FC<UploaderProps> = (props) => {
         )
     } else {
         return (
-            // react 18 https://solverfox.dev/writing/no-implicit-children/  https://juejin.cn/post/7090812134023495688  https://juejin.cn/post/7094037148088664078
-            //@ts-ignore 
             <FilePicker
                 maxSize={10}
                 sizeUnit='MB'
