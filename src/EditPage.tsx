@@ -19,7 +19,8 @@ import { EditPageProps } from './datatype/EditPageProps';
 import { ListProps } from 'framework7-react/components/list';
 import { SelectOption } from './datatype/SelectOption';
 import { AsynSelectInput } from "./components/AsyncSelectInput";
-import { TextBack } from './Config';
+import { f7ProConfig } from './Config';
+
 
 
 function initValidResultsAndCfgPasteHandler<T>(results: {}, errMsgs: {}, pasteHandlerConfig: {}, fields: FieldMeta<T>[], itemValue: T) {
@@ -537,7 +538,7 @@ export function CommonItemEditPage<T extends ItemBase>(
     }
 
     return <Page name={pageProps.id} id={pageProps.id} noNavbar={!pageProps.hasNavBar}>
-        {pageProps.hasNavBar && <Navbar title={"编辑" + pageProps.name} backLink={TextBack} />}
+        {pageProps.hasNavBar && <Navbar title={"编辑" + pageProps.name} backLink={f7ProConfig.TextBack} />}
         <List {...listProps}>
             {fields.map((e, i) => metaToInput(e, i, item))}
         </List>

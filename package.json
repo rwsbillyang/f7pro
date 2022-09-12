@@ -8,9 +8,9 @@
   },
   "keywords": [
     "react",
-    "hook",
-    "usecache",
-    "client side cache"
+    "framework7",
+    "Edit Page by json config",
+    "List Page by json config"
   ],
   "author": "rwsbillyang@qq.com",
   "license": "MIT",
@@ -20,7 +20,7 @@
   "homepage": "https://github.com/rwsbillyang/f7pro#readme",
   "type": "module",
   "dependencies": {
-    "react": "^18.0.18",
+    "react": "^17.0.0 || ^18.0.0",
     "usecache": "file:../usecache/dist",
     "framework7": "^7.0.7",
     "framework7-icons": "^5.0.3",

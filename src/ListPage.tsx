@@ -23,7 +23,8 @@ import { FieldMeta } from './datatype/FieldMeta';
 import { SearchView } from './components/SearchView';
 import { LoadMore } from './components/LoadMore';
 import { NoDataOrErr } from './components/NoDataOrErr';
-import { TextBack } from './Config';
+import { f7ProConfig } from './Config';
+
 
 
 export function deleteOne<T extends ItemBase>(pageProps: ListPageProps<T>, item?: ItemBase) {
@@ -137,7 +138,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         stacked={false}
         onPageReinit={pageReInit}
     >
-        {pageProps.hasNavBar && (MyNavBar? <MyNavBar pageProps={pageProps} initialValue={initialValue}/> : <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : TextBack} />)}
+        {pageProps.hasNavBar && (MyNavBar? <MyNavBar pageProps={pageProps} initialValue={initialValue}/> : <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} />)}
 
         {
             (searchFields && searchFields.length > 0) && SearchView(searchFields, setUseCache, setQuery, initialQuery, currentQuery, pageProps.initalQueryKey ? pageProps.cacheKey + pageProps.initalQueryKey : undefined)

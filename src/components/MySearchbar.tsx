@@ -1,11 +1,11 @@
 
-
+import React, { ChangeEvent } from "react"
 import { Cache, CacheStorage } from "usecache"
 import { Link, NavRight, Searchbar } from "framework7-react"
-import React, { ChangeEvent } from "react"
 
 
-const searchKey =  "search/word"
+
+export const searchKey =  "search/word"
 
 export const MySearchbar: React.FC<{ placeHolder?: string }> = (props) => {
     //const [keyword, setKeyword] = useState<string>()//使用state中的keyword总为空,改用session

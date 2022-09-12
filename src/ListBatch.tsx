@@ -11,12 +11,11 @@ import { ItemBase } from './datatype/ItemBase';
 import { TableCell } from './datatype/TableCell';
 import { BatchCallback } from './datatype/BatchCallback';
 import { UseCacheConfig } from 'usecache';
-import { PageProps } from './datatype/PageProps';
 
 
 
 //批量操作，先选择后批量操作
-export const ListBatchTableCard = <T extends ItemBase>(header: TableCell<T>[], batchs: BatchCallback<T>[], pageProps: PageProps, data?: T[]) => {
+export const ListBatchTableCard = <T extends ItemBase>(header: TableCell<T>[], batchs: BatchCallback<T>[], defaultIdentiyKey?: string, data?: T[]) => {
     const [selected,setSelected] = useState<T[]>([])
 
     return <Card className="data-table data-table-init">
@@ -60,14 +59,14 @@ export const ListBatchTableCard = <T extends ItemBase>(header: TableCell<T>[], b
                 <tbody>
                     {
                         data?.map((e) => <tr>
-                            <td className="checkbox-cell"> <Checkbox value={e[pageProps.key || UseCacheConfig.defaultIdentiyKey]} onChange={(e) => {
+                            <td className="checkbox-cell"> <Checkbox value={e[defaultIdentiyKey || UseCacheConfig.defaultIdentiyKey]} onChange={(e) => {
                                  const value = e.target.value;
                                  if (e.target.checked) {
-                                    const index = data.findIndex(e=>e[pageProps.key || UseCacheConfig.defaultIdentiyKey] === value)
+                                    const index = data.findIndex(e=>e[defaultIdentiyKey || UseCacheConfig.defaultIdentiyKey] === value)
                                     if(index >= 0) selected.push(data[index])
                                     else console.log("not found id="+value)
                                  } else {
-                                    const index = selected.findIndex(e=>e[pageProps.key || UseCacheConfig.defaultIdentiyKey] === value)
+                                    const index = selected.findIndex(e=>e[defaultIdentiyKey || UseCacheConfig.defaultIdentiyKey] === value)
                                     selected.splice(index, 1);
                                  }
                             }}/> </td>
