@@ -1,4 +1,4 @@
-import { CODE, DataBox, getDataFromBox, StorageType, CacheStorage, UseCacheConfig } from "usecache"
+import { CODE, DataBox, getDataFromBox, StorageType, CacheStorage, UseCacheConfig } from "@rwsbillyang/usecache"
 
 
 import { ListInput } from "framework7-react"

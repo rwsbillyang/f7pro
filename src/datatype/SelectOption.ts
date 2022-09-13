@@ -1,4 +1,4 @@
-import {UmiListPagination} from "usecache"
+import {UmiListPagination} from "@rwsbillyang/usecache"
 
 
 export interface SelectOption {

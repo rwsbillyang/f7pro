@@ -12,7 +12,7 @@ import {
 } from 'framework7-react';
 
 
-import { Cache, fetchWithLoading, UseCacheConfig } from 'usecache';
+import { Cache, fetchWithLoading, UseCacheConfig } from "@rwsbillyang/usecache";
 import { FieldMeta } from './datatype/FieldMeta';
 import { ItemBase } from './datatype/ItemBase';
 import { EditPageProps } from './datatype/EditPageProps';

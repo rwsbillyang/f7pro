@@ -10,7 +10,7 @@ import {
 import { ItemBase } from './datatype/ItemBase';
 import { TableCell } from './datatype/TableCell';
 import { BatchCallback } from './datatype/BatchCallback';
-import { UseCacheConfig } from 'usecache';
+import { UseCacheConfig } from "@rwsbillyang/usecache";
 
 
 

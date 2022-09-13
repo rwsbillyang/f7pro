@@ -16,7 +16,7 @@ import {
 import useBus, { dispatch } from 'use-bus'
 import { ItemBase } from './datatype/ItemBase';
 import { ListPageProps } from './datatype/ListPageProps';
-import { fetchWithLoading, UseCacheConfig, Cache, PaginationQueryBase, CacheStorage, StorageType, useCacheList} from 'usecache';
+import { fetchWithLoading, UseCacheConfig, Cache, PaginationQueryBase, CacheStorage, StorageType, useCacheList} from "@rwsbillyang/usecache";
 import { ListProps } from 'framework7-react/components/list';
 import { ListItemProps } from 'framework7-react/components/list-item';
 import { FieldMeta } from './datatype/FieldMeta';

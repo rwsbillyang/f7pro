@@ -1,6 +1,6 @@
 
 import React, { ChangeEvent } from "react"
-import { Cache, CacheStorage } from "usecache"
+import { Cache, CacheStorage } from "@rwsbillyang/usecache"
 import { Link, NavRight, Searchbar } from "framework7-react"
 
 

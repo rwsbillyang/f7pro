@@ -6,7 +6,7 @@ import { TableCell } from './datatype/TableCell';
 import { OperationCallback } from './datatype/OperationCallback';
 import { ItemBase } from './datatype/ItemBase';
 import { ListPageProps } from './datatype/ListPageProps';
-import { PaginationQueryBase, StorageType, CacheStorage, useCacheList } from 'usecache';
+import { PaginationQueryBase, StorageType, CacheStorage, useCacheList } from "@rwsbillyang/usecache";
 import { FieldMeta } from './datatype/FieldMeta';
 import { SearchView } from './components/SearchView';
 import { LoadMore } from './components/LoadMore';

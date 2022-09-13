@@ -13,7 +13,7 @@ import {
 } from 'framework7-react';
 
 
-import { Cache, CacheStorage, PaginationQueryBase, StorageType } from 'usecache';
+import { Cache, CacheStorage, PaginationQueryBase, StorageType } from "@rwsbillyang/usecache";
 
 import { dispatch } from 'use-bus';
 import { AsynSelectInput } from './AsyncSelectInput';
