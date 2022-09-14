@@ -89,7 +89,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     const { isLoading, isError, errMsg, loadMoreState, query, setQuery, list, refresh, setRefresh,  setUseCache , setIsLoadMore}
         = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey,  currentQuery, pageProps.needLoadMore === false ? false: true)
 
-    //console.log("CommonListPage: currentQuery=" + JSON.stringify(currentQuery))
+    if(f7ProConfig.EnableLog) console.log("CommonListPage: currentQuery=" + JSON.stringify(currentQuery))
 
     //从缓存中刷新
     useBus('refreshList-' + pageProps.id, () => setRefresh(refresh + 1), [refresh])
@@ -165,7 +165,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                             setUseCache(false)
                             setIsLoadMore(true)
                              //排序时，若指定了sortKey则使用指定的，否则默认使用_id
-                            const sortKey = (!!query?.pagination?.sKey) ? query.pagination.sKey : "_id"
+                            const sortKey = (!!query?.pagination?.sKey) ? query.pagination.sKey : (pageProps.key || UseCacheConfig.defaultIdentiyKey || "_id")
                             let lastValue =  (list && list.length > 0) ? list[list.length - 1][sortKey] : undefined 
                             if(lastValue !== undefined)
                             {

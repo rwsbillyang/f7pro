@@ -45,7 +45,7 @@ function initValidResultsAndCfgPasteHandler<T>(results: {}, errMsgs: {}, pasteHa
                     if (sub.cfgPasteHandler) {
                         const key = sub.type === 'textarea' ? `textarea[name='${e.name + "-" + sub.name}']` : `input[name='${e.name + "-" + sub.name}']`
                         pasteHandlerConfig[key] = sub.cfgPasteHandler
-                        console.log("add sub cfgPasteHandler for " + key)
+                        if(f7ProConfig.EnableLog) console.log("add sub cfgPasteHandler for " + key)
                     }
                 }
             }
@@ -65,7 +65,7 @@ function initValidResultsAndCfgPasteHandler<T>(results: {}, errMsgs: {}, pasteHa
             if (e.cfgPasteHandler) {
                 const key = e.type === 'textarea' ? `textarea[name='${e.name}']` : `input[name='${e.name}']`
                 pasteHandlerConfig[key] = e.cfgPasteHandler
-                console.log("add cfgPasteHandler for " + key)
+                if(f7ProConfig.EnableLog)  console.log("add cfgPasteHandler for " + key)
             }
         }
     }
@@ -75,11 +75,11 @@ const getInvalidKey = (results: {}) => {
     for (let i = 0; i < keys.length; i++) {
         const key = keys[i]
         if (results[key] === false) {
-            console.log(key + " is invalid")
+            if(f7ProConfig.EnableLog) console.log(key + " is invalid")
             return key
         }
     }
-    console.log("checkValid: all pass")
+    if(f7ProConfig.EnableLog) console.log("checkValid: all pass")
     return undefined
 }
 
@@ -146,7 +146,7 @@ export function CommonItemEditPage<T extends ItemBase>(
     //initProps会根据是否存在cfgPasteHandler，初始化pasteHandlerConfig，然后useEffect会调用initCfgPasteHandlers进行paste事件绑定
     const addPasteEventListeners = () => {
         const keys = Object.keys(pasteHandlerConfig);
-        console.log("initCfgPasteHandlers: " + JSON.stringify(keys))
+        if(f7ProConfig.EnableLog) console.log("initCfgPasteHandlers: " + JSON.stringify(keys))
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i]
             //https://developer.mozilla.org/zh-CN/docs/Web/API/Element/paste_event
@@ -191,7 +191,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                 //如果指定了validate，需要验证，则初始值指定为false，同时指定onValidate，更新valid结果
                 if (e.validate) {
                     e.onValidate = (isValid) => {
-                        console.log(e.name + ": onValidate is called to set: " + isValid)
+                        if(f7ProConfig.EnableLog) console.log(e.name + ": onValidate is called to set: " + isValid)
                         results[e.name] = isValid
                     }
                 }
@@ -208,7 +208,7 @@ export function CommonItemEditPage<T extends ItemBase>(
 
 
     const reset = () => {
-        console.log("after reset, restore to originalItem=" + JSON.stringify(originalItem))
+        if(f7ProConfig.EnableLog) console.log("after reset, restore to originalItem=" + JSON.stringify(originalItem))
         setItem(originalItem)
         setCheckValidResults({})
         setErrMsgs({})
@@ -226,13 +226,13 @@ export function CommonItemEditPage<T extends ItemBase>(
     const saveIfEdited = (continueAdd: boolean) => {
         if (textDirty) {
             const validateInputs = f7.input.validateInputs("#" + pageProps.id)
-            console.log("validateInputs=" + validateInputs)
+            if(f7ProConfig.EnableLog) console.log("validateInputs=" + validateInputs)
 
 
             //未通过校验检查，则提示出错，阻止保存
             const invalidKey = getInvalidKey(checkValidResults)
             if (invalidKey) {
-                console.log("data=" + JSON.stringify(item) + ", results=" + JSON.stringify(checkValidResults))
+                if(f7ProConfig.EnableLog) console.log("data=" + JSON.stringify(item) + ", results=" + JSON.stringify(checkValidResults))
                 f7.dialog.alert(errMsgs[invalidKey] || "请检查带*的项是否为空，以及是否正确")
                 return
             }
@@ -253,7 +253,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                             f7.data.dirty = false
                             //saveAdIntoStorage(ad, ad._id === undefined, id)
                             const cacheKey = pageProps.cacheKey
-                            console.log("isAdd=" + isAdd)
+                            if(f7ProConfig.EnableLog) console.log("isAdd=" + isAdd)
                             //CommonList中的新增和编辑时，均传递了isAdd值，各业务页面XXXEditPage中，若中继转发了该值，则使用它；
                             //若不中继转发，则继续通过_id进行判断，目的是兼容旧的代码，以及多数情况下无需通过isAdd判断
                             //只有新增时也有_id的情况，才通过isAdd方式来判断
