@@ -81,10 +81,11 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
 
     let currentQuery: Q = { ...initialQuery } as Q
     //如果指定了存储，则试图从localStorage中加载
-    if (pageProps.initalQueryKey) {
-        const v = CacheStorage.getItem(pageProps.cacheKey + pageProps.initalQueryKey, StorageType.OnlyLocalStorage)
-        if (v) currentQuery = JSON.parse(v) || initialQuery
-    }
+    //if (pageProps.initalQueryKey) {
+    const initalQueryKey = pageProps.cacheKey + "/initialQuery"
+    const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
+    if (v) currentQuery = JSON.parse(v) || initialQuery
+    //}
 
     const { isLoading, isError, errMsg, loadMoreState, query, setQuery, list, refresh, setRefresh,  setUseCache , setIsLoadMore}
         = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey,  currentQuery, pageProps.needLoadMore === false ? false: true)
@@ -141,7 +142,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         {pageProps.hasNavBar && (MyNavBar? <MyNavBar pageProps={pageProps} initialValue={initialValue}/> : <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} />)}
 
         {
-            (searchFields && searchFields.length > 0) && SearchView(searchFields, setUseCache, setQuery, initialQuery, currentQuery, pageProps.initalQueryKey ? pageProps.cacheKey + pageProps.initalQueryKey : undefined)
+            (searchFields && searchFields.length > 0) && SearchView(searchFields, setUseCache, setQuery, initialQuery, currentQuery, initalQueryKey)
         }
 
         {

@@ -136,7 +136,7 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
 
                     }}
                 >
-                    {e.type === 'select' && e.selectOptions?.map((option: SelectOption, i: number) => <option key={i} value={option.value === undefined ? option.label : option.value}>{option.label}</option>)}
+                    {e.type === 'select' && e.selectOptions?.map((option: SelectOption, i: number) => <option key={i}  selected={searchQuery[e.name] === option.value} value={option.value === undefined ? option.label : option.value}>{option.label}</option>)}
                 </ListInput>
         }
     }
@@ -154,7 +154,7 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
             <CardFooter >
                 <Link onClick={() => {
                     if (initalQueryShortKey)
-                        Cache.evictCache(initalQueryShortKey, StorageType.OnlyLocalStorage)
+                        Cache.evictCache(initalQueryShortKey, StorageType.OnlySessionStorage)
 
                     const q: Q = { ...initalQuery } as Q
 
@@ -183,7 +183,7 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
                         console.log("searchQuery=" + JSON.stringify(searchQuery))
 
                         if (initalQueryShortKey)
-                        CacheStorage.saveObject(initalQueryShortKey, searchQuery, StorageType.OnlyLocalStorage)
+                            CacheStorage.saveObject(initalQueryShortKey, searchQuery, StorageType.OnlySessionStorage)
                     } else{
                         f7.toast.show({text:"搜索条件未改变，无需重新搜索！换搜索条件后再试"})
                         console.log("not modify searchQuery")
