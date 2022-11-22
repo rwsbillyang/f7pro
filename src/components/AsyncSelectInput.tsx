@@ -2,19 +2,14 @@ import { CODE, DataBox, getDataFromBox, StorageType, CacheStorage, UseCacheConfi
 
 
 import { ListInput } from "framework7-react"
+import { ListInputProps } from "framework7-react/components/list-input"
 import React, { SyntheticEvent, useEffect, useState } from "react"
 import useBus from "use-bus"
-import { FieldMeta } from "../datatype/FieldMeta"
 import { MyAsyncSelectProps } from "../datatype/MyAsyncSelectProps"
 import { SelectOption } from "../datatype/SelectOption"
 
 
 
-
-
-// export const AsynSelectInput: React.FC<{
-//     onSelectChange: (option: SelectOption) => void, props: FieldMeta<>, asyncProps?: MyAsyncSelectProps
-// }> = ({ onChange, key, label, defaultValue, asyncProps }) => {
 /***
  * 由react管理state的受控组件，使用value将其值传递进来；若重置空值，则使用OptionEmptyValue
  * 
@@ -25,19 +20,24 @@ import { SelectOption } from "../datatype/SelectOption"
  * 对于编辑某一个实例来说，无需父组件二次修改selected状态；但对搜索重置来说，一旦指定了选项，如何从外部（父组件）修改其内部维护的selected状态呢？
  *  方案：采用useBus发送消息
  */
-export function AsynSelectInput<T> (props: FieldMeta<T>, onValueChange: (newValue?: string|number) => void, 
-asyncProps?: MyAsyncSelectProps){
+
+export const AsynSelectInput: React.FC<{
+    inputProps: ListInputProps, 
+    onValueChange: (newValue?: string|number) => void,
+    asyncProps?: MyAsyncSelectProps
+}> = (props) => {
+    const { inputProps, onValueChange, asyncProps } = props
     const OptionEmptyValue = "null" //如果设置为""空值，onChange得到是label如"请选择"而不是空
 
     const emptyOption: SelectOption = { label: "请选择", value: OptionEmptyValue } 
     const loadingOption: SelectOption = { label: "加载中", value: OptionEmptyValue }
     const [options, setOptions] = useState([loadingOption])
-    const [selected, setSelected] = useState(props.value || OptionEmptyValue) //AsynSelectInput内部维护的选项值，还有可能外部重新指定了该值（如搜索重置）
+    const [selected, setSelected] = useState(inputProps.value || OptionEmptyValue) //AsynSelectInput内部维护的选项值，还有可能外部重新指定了该值（如搜索重置）
     
 
     //console.log("AsynSelectInput: selected="+selected)
     
-    useBus('AsynSelectInput-reset-' + props.name, () => setSelected(OptionEmptyValue), [selected])
+    useBus('AsynSelectInput-reset-' + inputProps.name, () => setSelected(OptionEmptyValue), [selected])
     
     useEffect(() => {
         if (asyncProps) fetchCachely(asyncProps)
@@ -91,11 +91,12 @@ asyncProps?: MyAsyncSelectProps){
 
     return (
         <ListInput
-            {...props}
+            {...inputProps}
             type="select"
             //defaultValue={selected}
             value={selected}
             onChange={(event: SyntheticEvent) => {
+
                 const target = event.target as HTMLInputElement
                 const newValue = target.value
                 //如果设置option的值为空字符串，将得到label作为它的值；
@@ -113,3 +114,4 @@ asyncProps?: MyAsyncSelectProps){
         </ListInput>
     )
 }
+

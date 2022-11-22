@@ -312,24 +312,22 @@ export function CommonItemEditPage<T extends ItemBase>(
                 return isDisplay ? objectMetaToInput(e, itemValue) : null
             case 'asyncSelect':
                 //onValidate: e.validate? (isValid) => checkValidResults[e.name] = isValid : undefined,
-                return isDisplay ? AsynSelectInput({ ...e, value: itemValue[e.name] },
-                    (newValue?: string | number) => {
-                        if (e.required && !newValue) {
-                            console.log("asyncSelect directly set " + e.name + " false")
-                            checkValidResults[e.name] = false //bugfix patch for F7: 没有调用onValidate, 手工指定
-                        } else {
-                            console.log("asyncSelect directly set " + e.name + " true")
-                            checkValidResults[e.name] = true //bugfix patch for F7:  没有调用onValidate, 手工指定
-                        }
+                return isDisplay ? <AsynSelectInput inputProps = {{ ...e, value: itemValue[e.name] }} onValueChange={(newValue?: string | number) => {
+                    if (e.required && !newValue) {
+                        console.log("asyncSelect directly set " + e.name + " false")
+                        checkValidResults[e.name] = false //bugfix patch for F7: 没有调用onValidate, 手工指定
+                    } else {
+                        console.log("asyncSelect directly set " + e.name + " true")
+                        checkValidResults[e.name] = true //bugfix patch for F7:  没有调用onValidate, 手工指定
+                    }
 
-                        if (itemValue[e.name] !== newValue) {
-                            setTextDirty(true)
-                            f7.data.dirty = true
-                            itemValue[e.name] = newValue
-                            //setItem({ ...itemValue })
-                        }
-                    },
-                    e.asyncSelectProps) : null
+                    if (itemValue[e.name] !== newValue) {
+                        setTextDirty(true)
+                        f7.data.dirty = true
+                        itemValue[e.name] = newValue
+                        //setItem({ ...itemValue })
+                    }
+                }} asyncProps={e.asyncSelectProps} />: null
             case 'datepicker':
                 return isDisplay ? <ListInput key={i}
                     {...e}
@@ -425,23 +423,22 @@ export function CommonItemEditPage<T extends ItemBase>(
                         case 'object':
                             return objectMetaToInput(subMeta, itemValue)
                         case 'asyncSelect':
-                            return AsynSelectInput({ ...subMeta, value: (itemValue && itemValue[objectMeta.name]) ? itemValue[objectMeta.name][subMeta.name] : undefined },
-                                (newValue?: string | number) => {
-                                    if (subMeta.required && !newValue) {
-                                        if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = false //bugfix patch for F7:  没有调用onValidate, 手工指定
-                                    } else {
-                                        if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = true  //bugfix patch for F7: 没有调用onValidate, 手工指定
-                                    }
+                            return <AsynSelectInput inputProps={{ ...subMeta, value: (itemValue && itemValue[objectMeta.name]) ? itemValue[objectMeta.name][subMeta.name] : undefined }}
+                            onValueChange={(newValue?: string | number) => {
+                                if (subMeta.required && !newValue) {
+                                    if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = false //bugfix patch for F7:  没有调用onValidate, 手工指定
+                                } else {
+                                    if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = true  //bugfix patch for F7: 没有调用onValidate, 手工指定
+                                }
 
-                                    if (itemValue[subMeta.name] !== newValue) {
-                                        setTextDirty(true)
-                                        f7.data.dirty = true
-                                        itemValue[subMeta.name] = newValue
-                                        setItem({ ...itemValue })
-                                    }
-
-                                },
-                                subMeta.asyncSelectProps)
+                                if (itemValue[subMeta.name] !== newValue) {
+                                    setTextDirty(true)
+                                    f7.data.dirty = true
+                                    itemValue[subMeta.name] = newValue
+                                    setItem({ ...itemValue })
+                                }
+                            }} asyncProps={subMeta.asyncSelectProps} />
+                                
                         case 'datepicker':
                             return <ListInput key={i}
                                 {...subMeta}
