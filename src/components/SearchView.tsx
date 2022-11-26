@@ -42,8 +42,8 @@ import { SelectOption, SortOption } from '../datatype/SelectOption';
  */
 export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
     searchFields: FieldMeta<T>[],
-    setUseCache: React.Dispatch<React.SetStateAction<boolean>>,
-    setQuery: React.Dispatch<React.SetStateAction<Q|undefined>>,
+    setUseCache: (useLocalCahce: boolean) => void,
+    setQuery: (query: Q ) => void,
     initalQuery?: Q, currentQuery?: Q, initalQueryShortKey?: string) => {
 
     const [dirty, setDirty] = useState(false)

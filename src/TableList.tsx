@@ -1,17 +1,17 @@
-import React, { useEffect } from 'react';
-import { f7, Button, Page, Toolbar, Navbar, Icon, Block } from 'framework7-react';
+import { Block, Button, f7, Icon, Navbar, Page, Toolbar } from 'framework7-react';
+import React, { useEffect, useRef } from 'react';
 
+import { PaginationQueryBase, useCacheList } from "@rwsbillyang/usecache";
 import useBus from 'use-bus';
-import { TableCell } from './datatype/TableCell';
-import { OperationCallback } from './datatype/OperationCallback';
-import { ItemBase } from './datatype/ItemBase';
-import { ListPageProps } from './datatype/ListPageProps';
-import { PaginationQueryBase, StorageType, CacheStorage, useCacheList, UseCacheConfig } from "@rwsbillyang/usecache";
-import { FieldMeta } from './datatype/FieldMeta';
-import { SearchView } from './components/SearchView';
 import { LoadMore } from './components/LoadMore';
 import { NoDataOrErr } from './components/NoDataOrErr';
+import { SearchView } from './components/SearchView';
 import { f7ProConfig } from './Config';
+import { FieldMeta } from './datatype/FieldMeta';
+import { ItemBase } from './datatype/ItemBase';
+import { ListPageProps } from './datatype/ListPageProps';
+import { OperationCallback } from './datatype/OperationCallback';
+import { TableCell } from './datatype/TableCell';
 
 
 
@@ -56,26 +56,27 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
     addMax?: number,
     searchFields?: FieldMeta<T>[]) => {
         
-    let currentQuery: Q = { ...initialQuery } as Q
+   // let currentQuery: Q = { ...initialQuery } as Q
     //如果指定了存储，则试图从localStorage中加载
     //if (pageProps.initalQueryKey) {
         const initalQueryKey = pageProps.cacheKey + "/initialQuery"
-        const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
-        if (v) currentQuery = JSON.parse(v) || initialQuery
+      //  const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
+      //  if (v) currentQuery = JSON.parse(v) || initialQuery
     //}
+    const { current } = useRef( {query: initialQuery} )
 
-    const { isLoading, isError, errMsg, loadMoreState, query, setQuery, list, refresh, setRefresh, setUseCache, setIsLoadMore }
-        = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, currentQuery, pageProps.needLoadMore === false ? false : true)
+    const { isLoading, isError, errMsg, loadMoreState, setQuery, list, setRefresh, setUseCache, setIsLoadMore }
+        = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, current.query, pageProps.needLoadMore === false ? false : true)
 
-        if(f7ProConfig.EnableLog) console.log("TableListPage: currentQuery=" + JSON.stringify(currentQuery))
+        if(f7ProConfig.EnableLog) console.log("TableListPage: currentQuery=" + JSON.stringify(current.query))
 
     //从缓存中刷新
-    useBus('refreshList-' + pageProps.id, () => setRefresh(refresh + 1), [refresh])
+    useBus('refreshList-' + pageProps.id, () => setRefresh())
 
     //修改后重新加载数据, 因为需要刷新数据，故没有将List提取出来作为单独的component
     const pageReInit = () => {
         //console.log("pageReInit, refresh=" + refresh)
-        setRefresh(refresh + 1)
+        setRefresh()
         document.title = pageProps.name + "列表"
     }
     useEffect(() => {
@@ -90,7 +91,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
         {pageProps.hasNavBar && (MyNavBar ? <MyNavBar pageProps={pageProps} initialValue={initialValue} /> : <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} />)}
 
         {
-            (searchFields && searchFields.length > 0) && SearchView(searchFields, setUseCache, setQuery, initialQuery, currentQuery,initalQueryKey)
+            (searchFields && searchFields.length > 0) && SearchView(searchFields, setUseCache, setQuery, initialQuery, current.query, initalQueryKey)
         }
 
         {
@@ -107,15 +108,20 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
                             setUseCache(false)
                             setIsLoadMore(true)
                             //排序时，若指定了sortKey则使用指定的，否则默认使用_id
-                            const sortKey = (!!query?.pagination?.sKey) ? query.pagination.sKey : (pageProps.key || UseCacheConfig.defaultIdentiyKey || "_id")
-                            let lastValue =  (list && list.length > 0) ? list[list.length - 1][sortKey] : undefined 
-                            if(lastValue !== undefined)
-                            {
-                                lastValue += ""
-                            }
-                            const pagination = lastValue? {...query?.pagination, lastId: lastValue}: query?.pagination
-                            const q: Q = { ...query, pagination:pagination } as Q
-                            setQuery(q)
+                            if (list && list.length > 0) {
+                                const sortKey = (current.query?.pagination?.sKey) ? current.query.pagination.sKey : "_id"
+                                const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
+                                if (current.query?.pagination)
+                                  current.query.pagination.lastId = lastValue
+                                else{
+                                    if(current.query){
+                                        current.query.pagination = { lastId: lastValue }
+                                    }else{
+                                        const q: PaginationQueryBase= {pagination:{lastId: lastValue}} 
+                                        current.query = q as Q
+                                    }
+                                }
+                              }
                         }
                         }
                     /></Block>}
