@@ -27,7 +27,9 @@ export const AsynSelectInput: React.FC<{
     asyncProps?: MyAsyncSelectProps
 }> = (props) => {
     const { inputProps, onValueChange, asyncProps } = props
-    const OptionEmptyValue = "null" //如果设置为""空值，onChange得到是label如"请选择"而不是空
+   
+    //不设置为"null"，是因为某些Int类型不支持"null"；不设置为“-1”，是因为有些state值为-1，避免混淆
+    const OptionEmptyValue = "-2" //如果设置为""空值，onChange得到是label如"请选择"而不是空
 
     const emptyOption: SelectOption = { label: "请选择", value: OptionEmptyValue } 
     const loadingOption: SelectOption = { label: "加载中", value: OptionEmptyValue }
