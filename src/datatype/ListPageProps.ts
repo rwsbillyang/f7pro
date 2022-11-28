@@ -4,16 +4,15 @@ import { PageProps } from "./PageProps"
 export interface ListPageProps<T extends ItemBase> extends PageProps {
     listApi: string, //请求列表api，如'/api/oa/admin/list'
     delApi?: string, // 不提供则无删除按钮，删除Api， 如"/api/ad/admin/del" ，将自动再最后拼接id，最后拼接为："/api/ad/admin/del/{id}"
-    editPath?: (e: Partial<T>) => string, //不提供则不进入编辑页面，如"/admin/oa/edit"
-    needLoadMore?: boolean //默认为true 
-    swipeItemsLeft?: SwipeItem[], //向左滑动后的按钮项
-    swipeItemsRight?: SwipeItem[], //向右滑动后的按钮项
-    //clickPath?: (e?: Partial<T>) => string | undefined //点击后进入的页面,若为空，则不可点击。 如"/admin/oa/:appId/home/"，调用者负责拼接id
+    editPath?: (e: Partial<T>) => string, //不提供则不进入编辑页面，如"/admin/oa/edit", 当用于新增时，初始不全，故用Partial
+    needLoadMore?: boolean //默认为true，是否显示加载更多按钮 
+    swipeItemsLeft?: SwipeItem<T>[], //左侧按钮，向右滑动后的按钮项
+    swipeItemsRight?: SwipeItem<T>[], //右侧按钮，向左滑动后的按钮项
 }
 
 
-export interface SwipeItem{
+export interface SwipeItem<T extends ItemBase> {
     name: string,
     color: string,
-    onClick: ()=>void
+    onClick: (e: T)=>void
 }

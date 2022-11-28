@@ -81,44 +81,50 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     //}
     const { current } = useRef({ query: initialQuery })
 
-    const { isLoading, isError, errMsg, loadMoreState, setQuery, list, setRefresh, setUseCache, setIsLoadMore }
+    const { isLoading, isError, errMsg, loadMoreState, setQuery, list,refreshCount, setRefresh, setUseCache, setIsLoadMore }
         = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, current.query, pageProps.needLoadMore === false ? false : true)
 
     if (f7ProConfig.EnableLog) console.log("CommonListPage: currentQuery=" + JSON.stringify(current.query))
 
     //从缓存中刷新
-    useBus('refreshList-' + pageProps.id, () => setRefresh())
+    useBus('refreshList-' + pageProps.id, () => {
+        setRefresh()
+        if(f7ProConfig.EnableLog) console.log("recv refreshList notify, refresh=" + refreshCount)
+    }, [refreshCount])
 
     //修改后重新加载数据, 因为需要刷新数据，故没有将List提取出来作为单独的component
     const pageReInit = () => {
-        //console.log("pageReInit, refresh=" + refresh)
+        if(f7ProConfig.EnableLog) console.log("pageReInit, refresh=" + refreshCount)
         setRefresh()
         document.title = pageProps.name + "列表"
     }
     useEffect(() => {
+        setQuery(current.query)
         document.title = pageProps.name + "列表"
     }, [])
 
 
-    const defaultListItemPropsFunc = (itemValue: T) => {
-        const props: ListItemProps = {
-            title: itemValue["name"] || itemValue["_id"],
-            swipeout: !!pageProps.editPath || !!pageProps.delApi || (pageProps.swipeItemsLeft && pageProps.swipeItemsLeft.length > 0) || (pageProps.swipeItemsRight && pageProps.swipeItemsRight.length > 0),
-            routeProps: { item: itemValue },
-        }
-        return props
+    const mergeListItemPropsFunc = (itemValue: T) => {
+        const prop = listItemPropsFunc ? listItemPropsFunc(itemValue) : {}
+        prop.swipeout = !!pageProps.editPath || !!pageProps.delApi || (pageProps.swipeItemsLeft && pageProps.swipeItemsLeft.length > 0) || (pageProps.swipeItemsRight && pageProps.swipeItemsRight.length > 0),
+            prop.routeProps = { item: itemValue }
+
+        if (!listItemPropsFunc) prop.title = itemValue["name"] || itemValue[pageProps.key || "_id"]
+
+        return prop
     }
 
     const swipeoutSlotFunc = (itemValue: T, pageProps: ListPageProps<T>) => {
-        const editable = pageProps.editPath
-        const swipeout = !!editable || !!pageProps.delApi || (pageProps.swipeItemsLeft && pageProps.swipeItemsLeft.length > 0) || (pageProps.swipeItemsRight && pageProps.swipeItemsRight.length > 0)
+        const editPath = pageProps.editPath
+        const noEditPath = editPath === undefined || editPath === null
+        const swipeout = !noEditPath || !!pageProps.delApi || (pageProps.swipeItemsLeft && pageProps.swipeItemsLeft.length > 0) || (pageProps.swipeItemsRight && pageProps.swipeItemsRight.length > 0)
 
         if (!swipeout) return null
 
-        let leftArry: SwipeItem[] = []
+        let leftArry: SwipeItem<T>[] = []
 
-        if (editable) {
-            leftArry.push({ name: "编辑", color: "yellow", onClick: () => { f7.views.main.router.navigate(editable(itemValue), { props: { item: itemValue, isAdd: "0" } }) } })
+        if (!noEditPath) {
+            leftArry.push({ name: "编辑", color: "yellow", onClick: () => { f7.views.main.router.navigate(editPath(itemValue), { props: { item: itemValue, isAdd: "0" } }) } })
         }
         if (pageProps.delApi) {
             leftArry.push({ name: "删除", color: "red", onClick: () => { deleteOne(pageProps, itemValue) } })
@@ -129,27 +135,19 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
 
         const rightArry = pageProps.swipeItemsRight || []
 
-        return  <>
-                {leftArry.map((e, i) =>
-                    <SwipeoutActions left key={"left-" + i}>
-                        <SwipeoutButton color={e.color} close onClick={e.onClick}>{e.name}</SwipeoutButton>
-                    </SwipeoutActions>)
-                }
-                {
-                    rightArry.map((e, i) =>
-                        <SwipeoutActions left key={"right-" + i}>
-                            <SwipeoutButton color={e.color} close onClick={e.onClick}>{e.name}</SwipeoutButton>
-                        </SwipeoutActions>)
-                }
-            </>
-           
+        return <>
+            <SwipeoutActions left>
+                {leftArry.map((e, i) => <SwipeoutButton key={"left-" + i} color={e.color} close onClick={e.onClick}>{e.name}</SwipeoutButton>)}
+            </SwipeoutActions>
 
+            <SwipeoutActions right >
+                {rightArry.map((e, i) => <SwipeoutButton key={"right-" + i} color={e.color} close onClick={e.onClick}>{e.name}</SwipeoutButton>)}
+            </SwipeoutActions>
+        </>
     }
 
 
-    const itemPropsFunc = listItemPropsFunc || defaultListItemPropsFunc
     const itemSlotFunc = listItemSlotViewFunc || swipeoutSlotFunc
-
 
 
     return <Page name={pageProps.id} id={pageProps.id}
@@ -167,13 +165,13 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
             (list && list.length > 0) ?
                 <>
                     {CustomListView ? <CustomListView list={list} pageProps={pageProps} />
-                        : <List {...listProps}>
+                        : <List {...listProps} mediaList>
                             {list?.map((e: T, i: number) => {
-                                return <ListItem key={i} {...itemPropsFunc(e)}>
+                                return <ListItem key={i} {...mergeListItemPropsFunc(e)} >
                                     {itemSlotFunc(e, pageProps)}
                                 </ListItem>
                             })}
-                            {(pageProps.delApi || pageProps.editPath) && <div slot="after-list" style={{ fontSize: "12px", color: "gray", textAlign: "center" }}>向左滑动列表可编辑或删除 </div>}
+                            {(pageProps.delApi || pageProps.editPath) && <div slot="after-list" style={{ fontSize: "12px", color: "gray", textAlign: "center" }}>向右滑动列表可编辑或删除 </div>}
                         </List>}
                     {pageProps.needLoadMore !== false && <LoadMore
                         loadMoreState={loadMoreState}
