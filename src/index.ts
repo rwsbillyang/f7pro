@@ -20,7 +20,7 @@ import { UploaderProps } from "./datatype/UploaderProps";
 import { CommonItemEditPage } from "./EditPage";
 import { ListBatchTableCard } from "./ListBatch";
 import { CommonListPage, deleteOne } from "./ListPage";
-import { TableList, TableListPage } from "./TableList";
+import { TableList, TableListPage } from "./TableListPage";
 
 export type {
     BatchCallback,

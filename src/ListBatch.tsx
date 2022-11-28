@@ -14,8 +14,20 @@ import { UseCacheConfig } from "@rwsbillyang/usecache";
 
 
 
-//批量操作，先选择后批量操作
-export const ListBatchTableCard = <T extends ItemBase>(header: TableCell<T>[], batchs: BatchCallback<T>[], defaultIdentiyKey?: string, data?: T[]) => {
+
+/**
+ * 只是对当前的data列表数据进行选择，然后批量操作，不自行加载数据
+ * @param header 表头
+ * @param batchs 批量操作
+ * @param defaultIdentiyKey 标识ID，如_id, id(或其它数据库唯一键)
+ * @param data 列表数据
+ * @returns 
+ */
+export const ListBatchTableCard = <T extends ItemBase>(
+    header: TableCell<T>[], 
+    batchs: BatchCallback<T>[], 
+    defaultIdentiyKey?: string, 
+    data?: T[]) => {
     const [selected,setSelected] = useState<T[]>([])
 
     return <Card className="data-table data-table-init">

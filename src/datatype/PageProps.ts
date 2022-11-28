@@ -12,8 +12,8 @@
     cacheKey: string //不同的搜索条件initialQuery，应给出不同的缓存键值，如： appId+"/fan/"+scene，否则可能共用列表值
     id: string,//将用于缓存，page的名称和id，如“oaList”
     name: string, //名称，将用于展示给用户 如“公众号”
-    hasNavBar?: boolean,
-    noBackLink?: boolean,
+    hasNavBar?: boolean, //是否有导航栏
+    noBackLink?: boolean, //是否有返回按钮
     key?: string //primary key, _id for mongoDB doc, id for sql record
 }
 

@@ -55,31 +55,36 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
     MyNavBar?: React.FC<{ pageProps: ListPageProps<T>, initialValue?: Partial<T> }>,
     addMax?: number,
     searchFields?: FieldMeta<T>[]) => {
-        
-   // let currentQuery: Q = { ...initialQuery } as Q
+
+    // let currentQuery: Q = { ...initialQuery } as Q
     //如果指定了存储，则试图从localStorage中加载
     //if (pageProps.initalQueryKey) {
-        const initalQueryKey = pageProps.cacheKey + "/initialQuery"
-      //  const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
-      //  if (v) currentQuery = JSON.parse(v) || initialQuery
+    const initalQueryKey = pageProps.cacheKey + "/initialQuery"
+    //  const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
+    //  if (v) currentQuery = JSON.parse(v) || initialQuery
     //}
-    const { current } = useRef( {query: initialQuery} )
+    const { current } = useRef({ query: initialQuery })
 
-    const { isLoading, isError, errMsg, loadMoreState, setQuery, list, setRefresh, setUseCache, setIsLoadMore }
+    const { isLoading, isError, errMsg, loadMoreState, setQuery, refreshCount, list, setRefresh, setUseCache, setIsLoadMore }
         = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, current.query, pageProps.needLoadMore === false ? false : true)
 
-        if(f7ProConfig.EnableLog) console.log("TableListPage: currentQuery=" + JSON.stringify(current.query))
+    if (f7ProConfig.EnableLog) console.log("TableListPage: currentQuery=" + JSON.stringify(current.query))
+
 
     //从缓存中刷新
-    useBus('refreshList-' + pageProps.id, () => setRefresh())
+    useBus('refreshList-' + pageProps.id, () => {
+        setRefresh()
+        if (f7ProConfig.EnableLog) console.log("recv refreshList notify, refresh=" + refreshCount)
+    }, [refreshCount])
 
     //修改后重新加载数据, 因为需要刷新数据，故没有将List提取出来作为单独的component
     const pageReInit = () => {
-        //console.log("pageReInit, refresh=" + refresh)
+        if (f7ProConfig.EnableLog) console.log("pageReInit, refresh=" + refreshCount)
         setRefresh()
         document.title = pageProps.name + "列表"
     }
     useEffect(() => {
+        setQuery(current.query)
         document.title = pageProps.name + "列表"
     }, [])
 
@@ -99,7 +104,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
                 <>
                     {TableList(header, list, operations)}
 
-                    {pageProps.needLoadMore !== false &&<Block><LoadMore
+                    {pageProps.needLoadMore !== false && <Block><LoadMore
                         loadMoreState={loadMoreState}
                         isLoading={isLoading}
                         isError={isError}
@@ -108,20 +113,19 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
                             setUseCache(false)
                             setIsLoadMore(true)
                             //排序时，若指定了sortKey则使用指定的，否则默认使用_id
-                            if (list && list.length > 0) {
-                                const sortKey = (current.query?.pagination?.sKey) ? current.query.pagination.sKey : "_id"
-                                const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
-                                if (current.query?.pagination)
-                                  current.query.pagination.lastId = lastValue
-                                else{
-                                    if(current.query){
-                                        current.query.pagination = { lastId: lastValue }
-                                    }else{
-                                        const q: PaginationQueryBase= {pagination:{lastId: lastValue}} 
-                                        current.query = q as Q
-                                    }
+                            const sortKey = (current.query?.pagination?.sKey) ? current.query.pagination.sKey : "_id"
+                            const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
+                            if (current.query?.pagination)
+                                current.query.pagination.lastId = lastValue
+                            else {
+                                if (current.query) {
+                                    current.query.pagination = { lastId: lastValue }
+                                } else {
+                                    const q: PaginationQueryBase = { pagination: { lastId: lastValue } }
+                                    current.query = q as Q
                                 }
-                              }
+                            }
+                            setQuery(current.query)
                         }
                         }
                     /></Block>}

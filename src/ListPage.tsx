@@ -81,7 +81,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     //}
     const { current } = useRef({ query: initialQuery })
 
-    const { isLoading, isError, errMsg, loadMoreState, setQuery, list,refreshCount, setRefresh, setUseCache, setIsLoadMore }
+    const { isLoading, isError, errMsg, loadMoreState, setQuery, list, refreshCount, setRefresh, setUseCache, setIsLoadMore }
         = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, current.query, pageProps.needLoadMore === false ? false : true)
 
     if (f7ProConfig.EnableLog) console.log("CommonListPage: currentQuery=" + JSON.stringify(current.query))
@@ -89,12 +89,12 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     //从缓存中刷新
     useBus('refreshList-' + pageProps.id, () => {
         setRefresh()
-        if(f7ProConfig.EnableLog) console.log("recv refreshList notify, refresh=" + refreshCount)
+        if (f7ProConfig.EnableLog) console.log("recv refreshList notify, refresh=" + refreshCount)
     }, [refreshCount])
 
     //修改后重新加载数据, 因为需要刷新数据，故没有将List提取出来作为单独的component
     const pageReInit = () => {
-        if(f7ProConfig.EnableLog) console.log("pageReInit, refresh=" + refreshCount)
+        if (f7ProConfig.EnableLog) console.log("pageReInit, refresh=" + refreshCount)
         setRefresh()
         document.title = pageProps.name + "列表"
     }
@@ -151,11 +151,12 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
 
 
     return <Page name={pageProps.id} id={pageProps.id}
-        noNavbar={!pageProps.hasNavBar}
+        noNavbar={(!pageProps.hasNavBar && !MyNavBar)}
         stacked={false}
         onPageReinit={pageReInit}
     >
-        {pageProps.hasNavBar && (MyNavBar ? <MyNavBar pageProps={pageProps} initialValue={initialValue} /> : <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} />)}
+        {(MyNavBar ? <MyNavBar pageProps={pageProps} initialValue={initialValue} />
+            : (pageProps.hasNavBar ? <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} /> : null))}
 
         {
             (searchFields && searchFields.length > 0) && SearchView(searchFields, setUseCache, setQuery, initialQuery, current.query, initalQueryKey)
@@ -194,8 +195,8 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                                     current.query = q as Q
                                 }
                             }
-                        }
-                        }
+                            setQuery(current.query)
+                        }}
                     />}
                 </>
                 : <NoDataOrErr isLoading={isLoading} isError={isError} errMsg={errMsg} />

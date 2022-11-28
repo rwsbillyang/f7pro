@@ -12,7 +12,7 @@ export interface ListPageProps<T extends ItemBase> extends PageProps {
 
 
 export interface SwipeItem<T extends ItemBase> {
-    name: string,
-    color: string,
-    onClick: (e: T)=>void
+    name: string, //名称
+    color: string, //颜色
+    onClick: (e: T)=>void //点击后的动作
 }
