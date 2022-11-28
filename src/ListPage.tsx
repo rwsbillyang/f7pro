@@ -15,29 +15,30 @@ import { SearchView } from './components/SearchView';
 import { f7ProConfig } from './Config';
 import { FieldMeta } from './datatype/FieldMeta';
 import { ItemBase } from './datatype/ItemBase';
-import { ListPageProps } from './datatype/ListPageProps';
+import { ListPageProps, SwipeItem } from './datatype/ListPageProps';
 
 
 
 export function deleteOne<T extends ItemBase>(pageProps: ListPageProps<T>, item?: ItemBase) {
-    const id = item? item[pageProps.key || UseCacheConfig.defaultIdentiyKey] : undefined
+    const id = item ? item[pageProps.key || UseCacheConfig.defaultIdentiyKey] : undefined
     if (!id) {
         f7.dialog.alert("no id")
+        console.warn("no id when del, please set pageProps.key or UseCacheConfig.defaultIdentiyKey")
         return
     }
     f7.dialog.confirm('删除后不能恢复，确定要删除吗？', () => {
         const get = UseCacheConfig.request?.get
-        if(get){
+        if (get) {
             fetchWithLoading<number>(
                 () => get(pageProps.delApi + "/" + id),
                 () => {
                     console.log("successfully del:" + id)
                     Cache.onDelOneById(pageProps.cacheKey, id)
-    
+
                     dispatch("refreshList-" + pageProps.id) //删除完毕，发送refreshList，告知ListView去更新
                 })
         }
-        
+
     })
 }
 
@@ -69,21 +70,21 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         MyNavBar?: React.FC<{ pageProps: ListPageProps<T>, initialValue?: Partial<T> }>,
         addMax?: number,
         searchFields?: FieldMeta<T>[],
-) {
-    
-   // let currentQuery: Q = { ...initialQuery } as Q
+    ) {
+
+    // let currentQuery: Q = { ...initialQuery } as Q
     //如果指定了存储，则试图从localStorage中加载
     //if (pageProps.initalQueryKey) {
-     const initalQueryKey = pageProps.cacheKey + "/initialQuery"
+    const initalQueryKey = pageProps.cacheKey + "/initialQuery"
     // const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
     // if (v) currentQuery = JSON.parse(v) || initialQuery
     //}
-    const { current } = useRef( {query: initialQuery} )
+    const { current } = useRef({ query: initialQuery })
 
-    const { isLoading, isError, errMsg, loadMoreState, setQuery, list, setRefresh,  setUseCache , setIsLoadMore}
-        = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey,  current.query, pageProps.needLoadMore === false ? false: true)
+    const { isLoading, isError, errMsg, loadMoreState, setQuery, list, setRefresh, setUseCache, setIsLoadMore }
+        = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, current.query, pageProps.needLoadMore === false ? false : true)
 
-    if(f7ProConfig.EnableLog) console.log("CommonListPage: currentQuery=" + JSON.stringify(current.query))
+    if (f7ProConfig.EnableLog) console.log("CommonListPage: currentQuery=" + JSON.stringify(current.query))
 
     //从缓存中刷新
     useBus('refreshList-' + pageProps.id, () => setRefresh())
@@ -102,37 +103,61 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     const defaultListItemPropsFunc = (itemValue: T) => {
         const props: ListItemProps = {
             title: itemValue["name"] || itemValue["_id"],
-            swipeout: pageProps.pureReadOnly === undefined || !pageProps.pureReadOnly,
-            routeProps: { item: itemValue, isAdd: "0" },
-            //link: pageProps.clickPath ? pageProps.clickPath(itemValue) : undefined
+            swipeout: !!pageProps.editPath || !!pageProps.delApi || (pageProps.swipeItemsLeft && pageProps.swipeItemsLeft.length > 0) || (pageProps.swipeItemsRight && pageProps.swipeItemsRight.length > 0),
+            routeProps: { item: itemValue },
         }
         return props
     }
 
-    const defaultItemSlotViewFunc = (itemValue: T, pageProps: ListPageProps<T>) => {
-        return (pageProps.pureReadOnly === undefined || !pageProps.pureReadOnly) ?
-            <SwipeoutActions left>
-                <SwipeoutButton color="yellow" close onClick={() => {
-                    if (pageProps.editPath)
-                        f7.views.main.router.navigate(pageProps.editPath(itemValue), { props: { item: itemValue, isAdd: "0" } })
-                }}>编辑</SwipeoutButton>
-                {pageProps.delApi && <SwipeoutButton color="red" close onClick={() => deleteOne(pageProps, itemValue)}>删除</SwipeoutButton>}
-            </SwipeoutActions> : null
+    const swipeoutSlotFunc = (itemValue: T, pageProps: ListPageProps<T>) => {
+        const editable = pageProps.editPath
+        const swipeout = !!editable || !!pageProps.delApi || (pageProps.swipeItemsLeft && pageProps.swipeItemsLeft.length > 0) || (pageProps.swipeItemsRight && pageProps.swipeItemsRight.length > 0)
+
+        if (!swipeout) return null
+
+        let leftArry: SwipeItem[] = []
+
+        if (editable) {
+            leftArry.push({ name: "编辑", color: "yellow", onClick: () => { f7.views.main.router.navigate(editable(itemValue), { props: { item: itemValue, isAdd: "0" } }) } })
+        }
+        if (pageProps.delApi) {
+            leftArry.push({ name: "删除", color: "red", onClick: () => { deleteOne(pageProps, itemValue) } })
+        }
+        if (pageProps.swipeItemsLeft && pageProps.swipeItemsLeft.length > 0) {
+            leftArry = leftArry.concat(pageProps.swipeItemsLeft)
+        }
+
+        const rightArry = pageProps.swipeItemsRight || []
+
+        return  <>
+                {leftArry.map((e, i) =>
+                    <SwipeoutActions left key={"left-" + i}>
+                        <SwipeoutButton color={e.color} close onClick={e.onClick}>{e.name}</SwipeoutButton>
+                    </SwipeoutActions>)
+                }
+                {
+                    rightArry.map((e, i) =>
+                        <SwipeoutActions left key={"right-" + i}>
+                            <SwipeoutButton color={e.color} close onClick={e.onClick}>{e.name}</SwipeoutButton>
+                        </SwipeoutActions>)
+                }
+            </>
+           
 
     }
 
 
     const itemPropsFunc = listItemPropsFunc || defaultListItemPropsFunc
-    const itemSlotFunc = listItemSlotViewFunc || defaultItemSlotViewFunc
+    const itemSlotFunc = listItemSlotViewFunc || swipeoutSlotFunc
 
-   
+
 
     return <Page name={pageProps.id} id={pageProps.id}
         noNavbar={!pageProps.hasNavBar}
         stacked={false}
         onPageReinit={pageReInit}
     >
-        {pageProps.hasNavBar && (MyNavBar? <MyNavBar pageProps={pageProps} initialValue={initialValue}/> : <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} />)}
+        {pageProps.hasNavBar && (MyNavBar ? <MyNavBar pageProps={pageProps} initialValue={initialValue} /> : <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} />)}
 
         {
             (searchFields && searchFields.length > 0) && SearchView(searchFields, setUseCache, setQuery, initialQuery, current.query, initalQueryKey)
@@ -144,43 +169,41 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                     {CustomListView ? <CustomListView list={list} pageProps={pageProps} />
                         : <List {...listProps}>
                             {list?.map((e: T, i: number) => {
-                                return <ListItem key={i} {...itemPropsFunc(e)} swipeout={pageProps.pureReadOnly === undefined || !pageProps.pureReadOnly} routeProps={{ item: e }}>
+                                return <ListItem key={i} {...itemPropsFunc(e)}>
                                     {itemSlotFunc(e, pageProps)}
                                 </ListItem>
                             })}
-                            {(pageProps.pureReadOnly === undefined || !pageProps.pureReadOnly) && <div slot="after-list" style={{ fontSize: "12px", color: "gray", textAlign: "center" }}>向右滑动列表可编辑或删除 </div>}
+                            {(pageProps.delApi || pageProps.editPath) && <div slot="after-list" style={{ fontSize: "12px", color: "gray", textAlign: "center" }}>向左滑动列表可编辑或删除 </div>}
                         </List>}
-                  {pageProps.needLoadMore !== false && <LoadMore
+                    {pageProps.needLoadMore !== false && <LoadMore
                         loadMoreState={loadMoreState}
                         isLoading={isLoading}
                         isError={isError}
                         errMsg={errMsg}
-                        loadMore={() =>{
+                        loadMore={() => {
                             setUseCache(false)
                             setIsLoadMore(true)
-                             //排序时，若指定了sortKey则使用指定的，否则默认使用_id
-                             if (list && list.length > 0) {
-                                const sortKey = (current.query?.pagination?.sKey) ? current.query.pagination.sKey : "_id"
-                                const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
-                                if (current.query?.pagination)
-                                  current.query.pagination.lastId = lastValue
-                                else{
-                                    if(current.query){
-                                        current.query.pagination = { lastId: lastValue }
-                                    }else{
-                                        const q: PaginationQueryBase= {pagination:{lastId: lastValue}} 
-                                        current.query = q as Q
-                                    }
+                            //排序时，若指定了sortKey则使用指定的，否则默认使用_id
+                            const sortKey = (current.query?.pagination?.sKey) ? current.query.pagination.sKey : "_id"
+                            const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
+                            if (current.query?.pagination)
+                                current.query.pagination.lastId = lastValue
+                            else {
+                                if (current.query) {
+                                    current.query.pagination = { lastId: lastValue }
+                                } else {
+                                    const q: PaginationQueryBase = { pagination: { lastId: lastValue } }
+                                    current.query = q as Q
                                 }
-                              }
-                        }  
+                            }
                         }
-                    />}  
+                        }
+                    />}
                 </>
                 : <NoDataOrErr isLoading={isLoading} isError={isError} errMsg={errMsg} />
         }
         {
-            (pageProps.pureReadOnly !== true) &&
+            pageProps.editPath &&
             <Toolbar bottom>
                 <Button />
                 <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath(initialValue || {}) : undefined} routeProps={{ isAdd: "1", item: initialValue }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>

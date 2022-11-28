@@ -129,7 +129,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
                 : <NoDataOrErr isLoading={isLoading} isError={isError} errMsg={errMsg} />
         }
         {
-            (pageProps.pureReadOnly !== true) &&
+            (pageProps.editPath) &&
             <Toolbar bottom>
                 <Button />
                 <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath(initialValue || {}) : undefined} routeProps={{ isAdd: "1", item: initialValue }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
