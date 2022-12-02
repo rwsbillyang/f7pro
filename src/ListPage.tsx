@@ -140,10 +140,10 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         let leftArry: SwipeItem<T>[] = []
 
         if (!noEditPath) {
-            leftArry.push({ name: "编辑", color: "yellow", onClick: () => { f7.views.main.router.navigate(editPath(itemValue), { props: { item: itemValue, isAdd: "0" } }) } })
+            leftArry.push({ name: "编辑", color: "yellow", onClick: (e) => { f7.views.main.router.navigate(editPath(e), { props: { item: e, isAdd: "0" } }) } })
         }
         if (pageProps.delApi) {
-            leftArry.push({ name: "删除", color: "red", onClick: () => { deleteOne(pageProps, itemValue) } })
+            leftArry.push({ name: "删除", color: "red", onClick: (e) => { deleteOne(pageProps, e) } })
         }
         if (pageProps.swipeItemsLeft && pageProps.swipeItemsLeft.length > 0) {
             leftArry = leftArry.concat(pageProps.swipeItemsLeft)
@@ -153,11 +153,11 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
 
         return <>
             <SwipeoutActions left>
-                {leftArry.map((e, i) => <SwipeoutButton key={"left-" + i} color={e.color} close onClick={e.onClick}>{e.name}</SwipeoutButton>)}
+                {leftArry.map((e, i) => <SwipeoutButton key={"left-" + i} color={e.color} close onClick={()=>{e.onClick(itemValue)}}>{e.name}</SwipeoutButton>)}
             </SwipeoutActions>
 
             <SwipeoutActions right >
-                {rightArry.map((e, i) => <SwipeoutButton key={"right-" + i} color={e.color} close onClick={e.onClick}>{e.name}</SwipeoutButton>)}
+                {rightArry.map((e, i) => <SwipeoutButton key={"right-" + i} color={e.color} close onClick={()=>{e.onClick(itemValue)}}>{e.name}</SwipeoutButton>)}
             </SwipeoutActions>
         </>
     }
