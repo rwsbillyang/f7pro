@@ -1,7 +1,7 @@
 import { Block, Button, f7, Icon, Navbar, Page, Toolbar } from 'framework7-react';
 import React, { useEffect, useRef } from 'react';
 
-import { PaginationQueryBase, useCacheList } from "@rwsbillyang/usecache";
+import { Cache, CacheStorage,PaginationQueryBase, StorageType, useCacheList } from "@rwsbillyang/usecache";
 import useBus from 'use-bus';
 import { LoadMore } from './components/LoadMore';
 import { NoDataOrErr } from './components/NoDataOrErr';
@@ -63,7 +63,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
     //  const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
     //  if (v) currentQuery = JSON.parse(v) || initialQuery
     //}
-    const { current } = useRef({ query: initialQuery })
+    const { current } = useRef({ query: {...initialQuery} as Q })
 
     const { isLoading, isError, errMsg, loadMoreState, setQuery, refreshCount, list, setRefresh, setUseCache, setIsLoadMore }
         = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, current.query, pageProps.needLoadMore === false ? false : true)
@@ -76,6 +76,22 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
         setRefresh()
         if (f7ProConfig.EnableLog) console.log("recv refreshList notify, refresh=" + refreshCount)
     }, [refreshCount])
+
+    useBus('searchReset', () => {
+        if (f7ProConfig.EnableLog) console.log("recv searchReset")
+        Cache.evictCache(initalQueryKey, StorageType.OnlySessionStorage)
+        
+        current.query = { ...initialQuery } as Q
+        setUseCache(false)
+        setQuery(initialQuery)
+    })
+    useBus('search', () => {
+        if (f7ProConfig.EnableLog) console.log("recv search")
+        
+        CacheStorage.saveObject(initalQueryKey, current.query, StorageType.OnlySessionStorage)
+        setUseCache(false)
+        setQuery(current.query)
+    })
 
     //修改后重新加载数据, 因为需要刷新数据，故没有将List提取出来作为单独的component
     const pageReInit = () => {
@@ -96,7 +112,12 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
         {pageProps.hasNavBar && (MyNavBar ? <MyNavBar pageProps={pageProps} initialValue={initialValue} /> : <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} />)}
 
         {
-            (searchFields && searchFields.length > 0) && SearchView(searchFields, setUseCache, setQuery, initialQuery, current.query, initalQueryKey)
+            (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, ()=>{ 
+                //如果值有改变，则重置lastId
+                if (current.query.pagination){
+                    setIsLoadMore(false)
+                    current.query.pagination.lastId = undefined //修改搜索条件后，lastId重置从新开始
+                } })
         }
 
         {

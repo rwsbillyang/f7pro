@@ -1,10 +1,9 @@
-import { CODE, DataBox, getDataFromBox, StorageType, CacheStorage, UseCacheConfig } from "@rwsbillyang/usecache"
+import { CacheStorage, CODE, DataBox, getDataFromBox, StorageType, UseCacheConfig } from "@rwsbillyang/usecache"
 
 
 import { ListInput } from "framework7-react"
 import { ListInputProps } from "framework7-react/components/list-input"
 import React, { SyntheticEvent, useEffect, useState } from "react"
-import useBus from "use-bus"
 import { MyAsyncSelectProps } from "../datatype/MyAsyncSelectProps"
 import { SelectOption } from "../datatype/SelectOption"
 
@@ -20,16 +19,19 @@ import { SelectOption } from "../datatype/SelectOption"
  * 对于编辑某一个实例来说，无需父组件二次修改selected状态；但对搜索重置来说，一旦指定了选项，如何从外部（父组件）修改其内部维护的selected状态呢？
  *  方案：采用useBus发送消息
  */
-
-export const AsynSelectInput: React.FC<{
-    inputProps: ListInputProps, 
+//使用React.FC将会使li标签到ul外面去了
+//  export const AsynSelectInput: React.FC<{
+//     inputProps: ListInputProps, 
+//     onValueChange: (newValue?: string|number) => void,
+//     asyncProps?: MyAsyncSelectProps
+// }> = (props) => {
+export const AsynSelectInput = (inputProps: ListInputProps, 
     onValueChange: (newValue?: string|number) => void,
-    asyncProps?: MyAsyncSelectProps
-}> = (props) => {
-    const { inputProps, onValueChange, asyncProps } = props
+    asyncProps?: MyAsyncSelectProps)  => {
+    
    
     //不设置为"null"，是因为某些Int类型不支持"null"；不设置为“-1”，是因为有些state值为-1，避免混淆
-    const OptionEmptyValue = "-2" //如果设置为""空值，onChange得到是label如"请选择"而不是空
+    const OptionEmptyValue = "-2" //如果设置为""空值，onChange得到是label如"请选择"而不是空，变成非受控组件
 
     const emptyOption: SelectOption = { label: "请选择", value: OptionEmptyValue } 
     const loadingOption: SelectOption = { label: "加载中", value: OptionEmptyValue }
@@ -38,8 +40,8 @@ export const AsynSelectInput: React.FC<{
     
 
     //console.log("AsynSelectInput: selected="+selected)
-    
-    useBus('AsynSelectInput-reset-' + inputProps.name, () => setSelected(OptionEmptyValue), [selected])
+    //SearchView中dispatch
+   // useBus('AsynSelectInput-reset-' + inputProps.name, () => setSelected(OptionEmptyValue), [selected])
     
     useEffect(() => {
         if (asyncProps) fetchCachely(asyncProps)
@@ -95,8 +97,10 @@ export const AsynSelectInput: React.FC<{
         <ListInput
             {...inputProps}
             type="select"
-            //defaultValue={selected}
-            value={selected}
+            
+            //因异步加载，加载完成后指定其新的值，需要使用受控组件
+            //defaultValue={selected} //非受控组件： 用户输入A => input 中显示A
+            value={selected} //受控组件： 用户输入A => 触发onChange事件 => handleChange 中设置 setState("A") => 渲染input使他的value变成A
             onChange={(event: SyntheticEvent) => {
 
                 const target = event.target as HTMLInputElement

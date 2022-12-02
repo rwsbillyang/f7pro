@@ -5,7 +5,7 @@ import {
 import React, { useEffect, useRef } from 'react';
 
 //https://www.npmjs.com/package/use-bus
-import { Cache, fetchWithLoading, PaginationQueryBase, UseCacheConfig, useCacheList } from "@rwsbillyang/usecache";
+import { Cache, CacheStorage, fetchWithLoading, PaginationQueryBase, StorageType, UseCacheConfig, useCacheList } from "@rwsbillyang/usecache";
 import { ListProps } from 'framework7-react/components/list';
 import { ListItemProps } from 'framework7-react/components/list-item';
 import useBus, { dispatch } from 'use-bus';
@@ -79,7 +79,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     // const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
     // if (v) currentQuery = JSON.parse(v) || initialQuery
     //}
-    const { current } = useRef({ query: initialQuery })
+    const { current } = useRef({ query: { ...initialQuery } as Q })
 
     const { isLoading, isError, errMsg, loadMoreState, setQuery, list, refreshCount, setRefresh, setUseCache, setIsLoadMore }
         = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, current.query, pageProps.needLoadMore === false ? false : true)
@@ -91,6 +91,22 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         setRefresh()
         if (f7ProConfig.EnableLog) console.log("recv refreshList notify, refresh=" + refreshCount)
     }, [refreshCount])
+
+    useBus('searchReset', () => {
+        if (f7ProConfig.EnableLog) console.log("recv searchReset")
+        Cache.evictCache(initalQueryKey, StorageType.OnlySessionStorage)
+        
+        current.query = { ...initialQuery } as Q
+        setUseCache(false)
+        setQuery(initialQuery)
+    })
+    useBus('search', () => {
+        if (f7ProConfig.EnableLog) console.log("recv search")
+        
+        CacheStorage.saveObject(initalQueryKey, current.query, StorageType.OnlySessionStorage)
+        setUseCache(false)
+        setQuery(current.query)
+    })
 
     //修改后重新加载数据, 因为需要刷新数据，故没有将List提取出来作为单独的component
     const pageReInit = () => {
@@ -159,7 +175,12 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
             : (pageProps.hasNavBar ? <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} /> : null))}
 
         {
-            (searchFields && searchFields.length > 0) && SearchView(searchFields, setUseCache, setQuery, initialQuery, current.query, initalQueryKey)
+            (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, ()=>{ 
+                //如果值有改变，则重置lastId
+                if (current.query.pagination){
+                    setIsLoadMore(false)
+                    current.query.pagination.lastId = undefined //修改搜索条件后，lastId重置从新开始
+                } })
         }
 
         {

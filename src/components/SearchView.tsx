@@ -1,25 +1,16 @@
-import React, { SyntheticEvent, useState } from 'react';
 import {
-    Button,
-    ListItem,
-    List,
-    CardContent,
-    Card,
-    CardFooter,
-    Toggle,
-    ListInput,
-    f7,
-    Link,
+    Button, Card, CardContent, CardFooter, Link, List, ListInput, ListItem, Toggle
 } from 'framework7-react';
+import React, { SyntheticEvent } from 'react';
 
 
-import { Cache, CacheStorage, PaginationQueryBase, StorageType } from "@rwsbillyang/usecache";
+import { PaginationQueryBase } from "@rwsbillyang/usecache";
 
 import { dispatch } from 'use-bus';
 import { AsynSelectInput } from './AsyncSelectInput';
 
-import { ItemBase } from "../datatype/ItemBase"
 import { FieldMeta } from '../datatype/FieldMeta';
+import { ItemBase } from "../datatype/ItemBase";
 import { SelectOption, SortOption } from '../datatype/SelectOption';
 
 //https://stackoverflow.com/questions/53958028/how-to-use-generics-in-props-in-react-in-a-functional-component
@@ -42,20 +33,11 @@ import { SelectOption, SortOption } from '../datatype/SelectOption';
  */
 export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
     searchFields: FieldMeta<T>[],
-    setUseCache: (useLocalCahce: boolean) => void,
-    setQuery: (query: Q ) => void,
-    initalQuery?: Q, currentQuery?: Q, initalQueryShortKey?: string) => {
-
-    const [dirty, setDirty] = useState(false)
-
-    const [searchQuery, setSearchQuery] = useState({ ...currentQuery } as Q)
-
-    //console.log("searchQuery="+JSON.stringify(searchQuery))
+    queryRef: Q,
+    onValueChanged: ()=>void) => {
 
     const metaToInput = (e: FieldMeta<T>, i: number) => {
         e.required = false
-        //e.validate = false
-        //e.pattern = undefined
         e.errorMessage = undefined
         //console.log("label="+e.label + ", isDisplay="+isDisplay + ",item="+JSON.stringify(item))
         switch (e.type) {
@@ -66,42 +48,41 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
             case "radio":
                 return <ListItem key={i}>
                     <span>{e.label}</span>
-                    <Toggle checked={searchQuery[e.name]}
+                    <Toggle checked={queryRef[e.name]}
                         onToggleChange={(newValue: boolean) => {
-                            if (searchQuery[e.name] !== newValue) {
-                                searchQuery[e.name] = newValue
-                                setDirty(true)
-                                setSearchQuery({ ...searchQuery })
+                            if (queryRef[e.name] !== newValue) {
+                                queryRef[e.name] = newValue
+
+                                onValueChanged()
                             }
 
                         }} ></Toggle>
                 </ListItem>
             case 'asyncSelect':
-                return <AsynSelectInput inputProps={{ ...e, value: searchQuery[e.name] }}
-                   onValueChange={(newValue?: string | number) => {
-                    if (searchQuery[e.name] !== newValue) {
-                        searchQuery[e.name] = newValue
-                        setDirty(true)
-                        setSearchQuery({ ...searchQuery }) //使用value，则需重置state
-                    }
-                }} asyncProps={e.asyncSelectProps}  />
+                return AsynSelectInput({ ...e, value: queryRef[e.name] },
+                    (newValue?: string | number) => {
+                        if (queryRef[e.name] !== newValue) {
+                            queryRef[e.name] = newValue
+                            
+                            onValueChanged()
+                        }
+                    }, e.asyncSelectProps)
             case 'sort':
                 e.type = "select"
                 return e.sortOptions ? <ListInput key={i}
                     {...e}
-                    value={searchQuery[e.name] || ''}
+                    value={queryRef[e.name] || ''}
                     onChange={(event: SyntheticEvent) => {
                         const target = event.target as HTMLInputElement
                         const newValue = target.value
 
-                        if (searchQuery[e.name] !== newValue) {
+                        if (queryRef[e.name] !== newValue) {
                             console.log("newValue=" + newValue)
-                            searchQuery[e.name] = newValue
-                            setDirty(true)
+                            queryRef[e.name] = newValue
 
-                            const pagination = e.sortOptions?.find(e => e.pagination?.sKey === newValue)?.pagination
-
-                            setSearchQuery({ ...searchQuery, pagination: pagination }) //使用value值，则需重置state
+                            //如果值有改变，则重置lastId
+                            onValueChanged()
+                            //   setSearchQuery({ ...searchQuery, pagination: pagination }) //使用value值，则需重置state
                         }
                     }}
                 > {e.sortOptions?.map((option: SortOption, i: number) => <option key={i} value={option.pagination?.sKey}>{option.label}</option>)}
@@ -112,31 +93,31 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
                 return <ListInput key={i}
                     {...e}
                     //defaultValue={searchQuery[e.name] || ''}
-                    value={searchQuery[e.name] || ''}
+                    value={queryRef[e.name] || ''}
                     onChange={(event: SyntheticEvent) => {
                         const target = event.target as HTMLInputElement
                         const newValue = target.value.trim()
 
-                        if (searchQuery[e.name] !== newValue) {
+                        if (queryRef[e.name] !== newValue) {
                             console.log("newValue=" + newValue)
-                            searchQuery[e.name] = newValue
-                            setDirty(true)
-                            setSearchQuery({ ...searchQuery }) //使用value值，则需重置state
+                            queryRef[e.name] = newValue
+                            
+                            //如果值有改变，则重置lastId
+                            onValueChanged()
                         }
                     }}
                     onInputClear={() => {
-
-                        console.log("onInputClear: searchQuery[e.name]=" + searchQuery[e.name])
-                        if (searchQuery[e.name]) { //第一次点击clear button时只是获取焦点，但此回调也会被回调，故不能使用此判断，或直接去掉clear button
+                        if (queryRef[e.name]) { //第一次点击clear button时只是获取焦点，但此回调也会被回调，故不能使用此判断，或直接去掉clear button
                             console.log("onInputClear takes effect, searchQuery[e.name] is cleared")
-                            searchQuery[e.name] = undefined
-                            setDirty(true)
-                            setSearchQuery({ ...searchQuery }) //使用value值，则需重置state
+                            queryRef[e.name] = undefined
+
+                            //如果值有改变，则重置lastId
+                            onValueChanged()
                         }
 
                     }}
                 >
-                    {e.type === 'select' && e.selectOptions?.map((option: SelectOption, i: number) => <option key={i}  selected={searchQuery[e.name] === option.value} value={option.value === undefined ? option.label : option.value}>{option.label}</option>)}
+                    {e.type === 'select' && e.selectOptions?.map((option: SelectOption, i: number) => <option key={i} selected={queryRef[e.name] === option.value} value={option.value === undefined ? option.label : option.value}>{option.label}</option>)}
                 </ListInput>
         }
     }
@@ -153,42 +134,11 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
             </CardContent>
             <CardFooter >
                 <Link onClick={() => {
-                    if (initalQueryShortKey)
-                        Cache.evictCache(initalQueryShortKey, StorageType.OnlySessionStorage)
-
-                    const q: Q = { ...initalQuery } as Q
-
-
-                    //重置时state中各字段值设置为空后，即undefined，但undefined也代表没有做任何赋值动作，
-                    //为了明确指定各input的value为''，需显式指定value为''。但AsynSelectInput内部维护着一个自己已选
-                    //中的状态selected,虽明确告诉它value已经变了, 但并没有修改到该state
-                    searchFields.filter((e) => e.type === 'asyncSelect').forEach((e) => dispatch("AsynSelectInput-reset-" + e.name))
-                    setUseCache(false)
-                    setSearchQuery(q)
-                    setQuery(q)
-                    console.log("reset to initalQuery: " + JSON.stringify(q))
-
+                   dispatch("searchReset")
                 }}>重置</Link>
-                
+
                 <Button onClick={() => {
-                    if (dirty) {
-                        setDirty(false)
-
-                        setUseCache(false)
-                        if(searchQuery.pagination)
-                            searchQuery.pagination.lastId = undefined //修改搜索条件后，lastId重置从新开始
-                        
-                        setQuery({ ...searchQuery })
-
-                        console.log("searchQuery=" + JSON.stringify(searchQuery))
-
-                        if (initalQueryShortKey)
-                            CacheStorage.saveObject(initalQueryShortKey, searchQuery, StorageType.OnlySessionStorage)
-                    } else{
-                        f7.toast.show({text:"搜索条件未改变，无需重新搜索！换搜索条件后再试"})
-                        console.log("not modify searchQuery")
-                    }
-                        
+                    dispatch("search")
                 }}>搜索</Button>
 
             </CardFooter>
