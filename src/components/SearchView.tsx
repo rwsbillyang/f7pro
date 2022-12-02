@@ -71,7 +71,7 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
                 e.type = "select"
                 return e.sortOptions ? <ListInput key={i}
                     {...e}
-                    value={queryRef[e.name] || ''}
+                    defaultValue={queryRef[e.name]} //非受控组件，值变更显示由dom控制
                     onChange={(event: SyntheticEvent) => {
                         const target = event.target as HTMLInputElement
                         const newValue = target.value
@@ -92,8 +92,7 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
 
                 return <ListInput key={i}
                     {...e}
-                    //defaultValue={searchQuery[e.name] || ''}
-                    value={queryRef[e.name] || ''}
+                    defaultValue={queryRef[e.name]} //非受控组件，值变更显示由dom控制
                     onChange={(event: SyntheticEvent) => {
                         const target = event.target as HTMLInputElement
                         const newValue = target.value.trim()
