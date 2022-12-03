@@ -364,6 +364,19 @@ export function CommonItemEditPage<T extends ItemBase>(
                         }
                     }}
                 /> : null
+            case 'texteditor':
+                return isDisplay ? <ListInput key={i}
+                    {...e}
+                    value={itemValue[e.name]||""}
+                    onTextEditorChange={(newValue) => {
+                        if (itemValue[e.name] !== newValue) {
+                            setTextDirty(true)
+                            f7.data.dirty = true
+                            itemValue[e.name] = newValue
+                            setItem({ ...itemValue })
+                        }
+                    }}
+                />: null
             default:
                 return isDisplay ? <ListInput key={i}
                     {...e}
@@ -486,6 +499,36 @@ export function CommonItemEditPage<T extends ItemBase>(
                                     }
                                 }}
                             />
+                            case 'texteditor':
+                                return (!subMeta.depend || (subMeta.depend && subMeta.depend(itemValue))) ? <ListInput key={i}
+                                {...subMeta}
+                                value={((itemValue && itemValue[objectMeta.name]) ? itemValue[objectMeta.name][subMeta.name] : "") || ""}
+                                onTextEditorChange={(newValue) => {
+                                    if (itemValue[objectMeta.name]) {
+                                        if (itemValue[objectMeta.name][subMeta.name] !== newValue) {
+                                            setTextDirty(true)
+                                            f7.data.dirty = true
+                                            itemValue[objectMeta.name][subMeta.name] = newValue
+                                            setItem({ ...itemValue })
+                                        }
+                                    } else {
+                                        if (newValue) {
+                                            setTextDirty(true)
+                                            const obj = {}
+                                            obj[subMeta.name] = newValue
+                                            if (itemValue) {
+                                                itemValue[objectMeta.name] = obj
+                                                setItem({ ...itemValue })
+                                            } else {
+                                                const newItem = {}
+                                                newItem[objectMeta.name] = obj
+                                                setItem(newItem)
+                                            }
+                                        }
+
+                                    }
+                                }} /> : null
+
                         default:
                             return (!subMeta.depend || (subMeta.depend && subMeta.depend(itemValue))) ? <ListInput key={i}
                                 {...subMeta}
