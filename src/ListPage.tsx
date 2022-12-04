@@ -33,7 +33,7 @@ export function deleteOne<T extends ItemBase>(pageProps: ListPageProps<T>, item?
                 () => get(pageProps.delApi + "/" + id),
                 () => {
                     console.log("successfully del:" + id)
-                    Cache.onDelOneById(pageProps.cacheKey, id)
+                    Cache.onDelOneById(pageProps.cacheKey, id, pageProps.key)
 
                     dispatch("refreshList-" + pageProps.id) //删除完毕，发送refreshList，告知ListView去更新
                 })
