@@ -33,7 +33,7 @@ export function deleteOne<T extends ItemBase>(pageProps: ListPageProps<T>, item?
                 () => get(pageProps.delApi + "/" + id),
                 () => {
                     console.log("successfully del:" + id)
-                    Cache.onDelOneById(pageProps.cacheKey, id, pageProps.key)
+                    if (pageProps.cacheKey) Cache.onDelOneById(pageProps.cacheKey, id, pageProps.key)
 
                     dispatch("refreshList-" + pageProps.id) //删除完毕，发送refreshList，告知ListView去更新
                 })
@@ -55,6 +55,8 @@ export function deleteOne<T extends ItemBase>(pageProps: ListPageProps<T>, item?
  * @param MyNavBar 自定义NavBar，额外的操作菜单
  * @param addMax 新增次数限制
  * @param searchFields 需要搜索时，传递过来的搜索字段
+ * @param ListTopView 顶部控件，非空则位于listView上方
+ * @param ListBottomView 底部控件，非空则位于listView下方
  * @returns 返回具备LoadMore的列表页面,支持修改或删除后对缓存的刷新
  */
 //export const CommonListPage: React.FC<{listProps: ListPageProps, titleFunc:(e: T)=>string, initialQuery?: Q}> = ({listProps, titleFunc, initialQuery}) => {
@@ -70,6 +72,8 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         MyNavBar?: React.FC<{ pageProps: ListPageProps<T>, initialValue?: Partial<T> }>,
         addMax?: number,
         searchFields?: FieldMeta<T>[],
+        ListTopView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>, initialValue?: Partial<T> }>,
+        ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>, initialValue?: Partial<T> }>
     ) {
 
     // let currentQuery: Q = { ...initialQuery } as Q
@@ -95,14 +99,14 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     useBus('searchReset', () => {
         if (f7ProConfig.EnableLog) console.log("recv searchReset")
         Cache.evictCache(initalQueryKey, StorageType.OnlySessionStorage)
-        
+
         current.query = { ...initialQuery } as Q
         setUseCache(false)
         setQuery(initialQuery)
     })
     useBus('search', () => {
         if (f7ProConfig.EnableLog) console.log("recv search")
-        
+
         CacheStorage.saveObject(initalQueryKey, current.query, StorageType.OnlySessionStorage)
         setUseCache(false)
         setQuery(current.query)
@@ -153,11 +157,11 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
 
         return <>
             <SwipeoutActions left>
-                {leftArry.map((e, i) => <SwipeoutButton key={"left-" + i} color={e.color} close onClick={()=>{e.onClick(itemValue)}}>{e.name}</SwipeoutButton>)}
+                {leftArry.map((e, i) => <SwipeoutButton key={"left-" + i} color={e.color} close onClick={() => { e.onClick(itemValue) }}>{e.name}</SwipeoutButton>)}
             </SwipeoutActions>
 
             <SwipeoutActions right >
-                {rightArry.map((e, i) => <SwipeoutButton key={"right-" + i} color={e.color} close onClick={()=>{e.onClick(itemValue)}}>{e.name}</SwipeoutButton>)}
+                {rightArry.map((e, i) => <SwipeoutButton key={"right-" + i} color={e.color} close onClick={() => { e.onClick(itemValue) }}>{e.name}</SwipeoutButton>)}
             </SwipeoutActions>
         </>
     }
@@ -175,14 +179,23 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
             : (pageProps.hasNavBar ? <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} /> : null))}
 
         {
-            (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, ()=>{ 
+            (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, () => {
+                const p = current.query?.pagination
                 //如果值有改变，则重置lastId
-                if (current.query.pagination){
+                if (p) {
                     setIsLoadMore(false)
-                    current.query.pagination.lastId = undefined //修改搜索条件后，lastId重置从新开始
-                } })
+                    //修改搜索条件后，重置分页，从第一页开始
+                    //如果指定了current，且大于0，则优先使用current进行分页
+                    if (p.current) {
+                        p.current = 1
+                        p.lastId = undefined
+                    } else {
+                        p.lastId = undefined
+                    }
+                }
+            })
         }
-
+        {ListTopView && <ListTopView list={list} pageProps={pageProps} initialValue={initialValue} />}
         {
             (list && list.length > 0) ?
                 <>
@@ -203,25 +216,37 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                         loadMore={() => {
                             setUseCache(false)
                             setIsLoadMore(true)
-                            //排序时，若指定了sortKey则使用指定的，否则默认使用_id
-                            const sortKey = (current.query?.pagination?.sKey) ? current.query.pagination.sKey : "_id"
-                            const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
-                            if (current.query?.pagination)
-                                current.query.pagination.lastId = lastValue
-                            else {
-                                if (current.query) {
-                                    current.query.pagination = { lastId: lastValue }
-                                } else {
-                                    const q: PaginationQueryBase = { pagination: { lastId: lastValue } }
-                                    current.query = q as Q
+
+                            const p = current.query?.pagination
+
+                            //如果指定了current，且大于0，则优先使用current进行分页
+                            if (p?.current) {
+                                p.current += 1
+                                p.lastId = undefined
+                            } else {
+                                //排序时，若指定了sortKey则使用指定的，否则默认使用_id
+                                const sortKey = (p?.sKey) ? p.sKey : "_id"
+                                const lastValue = list[list.length - 1][sortKey] + "" //转换为字符串
+                                if (p)
+                                    p.lastId = lastValue
+                                else {
+                                    if (current.query) {
+                                        current.query.pagination = { lastId: lastValue }
+                                    } else {
+                                        const q: PaginationQueryBase = { pagination: { lastId: lastValue } }
+                                        current.query = q as Q
+                                    }
                                 }
                             }
+
+
                             setQuery(current.query)
                         }}
                     />}
                 </>
                 : <NoDataOrErr isLoading={isLoading} isError={isError} errMsg={errMsg} />
         }
+        {ListBottomView && <ListBottomView list={list} pageProps={pageProps} initialValue={initialValue} />}
         {
             pageProps.editPath &&
             <Toolbar bottom>

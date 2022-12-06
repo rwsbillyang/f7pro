@@ -97,7 +97,7 @@ export function CommonItemEditPage<T extends ItemBase>(
     fields: FieldMeta<T>[],
     originalItem: Partial<T>,
     listProps?: ListProps,
-    isAdd?: string,
+    isAdd?: boolean,
     onSaveSuccess?: (() => void)
 ) {
     const [item, setItem] = useState({ ...originalItem })
@@ -257,20 +257,23 @@ export function CommonItemEditPage<T extends ItemBase>(
                             //CommonList中的新增和编辑时，均传递了isAdd值，各业务页面XXXEditPage中，若中继转发了该值，则使用它；
                             //若不中继转发，则继续通过_id进行判断，目的是兼容旧的代码，以及多数情况下无需通过isAdd判断
                             //只有新增时也有_id的情况，才通过isAdd方式来判断
-                            if (isAdd === undefined) {//通过旧的方式：通过_id判断
-                                if (item[pageProps.key || UseCacheConfig.defaultIdentiyKey] === undefined) {//以XXX._id作为比较
-                                    //item._id = id
-                                    Cache.onAddOne(cacheKey, doc)
+                            if(cacheKey){
+                                if (isAdd) {//通过旧的方式：通过_id判断
+                                    if (item[pageProps.key || UseCacheConfig.defaultIdentiyKey] === undefined) {//以XXX._id作为比较
+                                        //item._id = id
+                                        Cache.onAddOne(cacheKey, doc)
+                                    } else {
+                                        Cache.onEditOne(cacheKey, doc, pageProps.key)
+                                    }
                                 } else {
-                                    Cache.onEditOne(cacheKey, doc, pageProps.key)
-                                }
-                            } else {
-                                if (isAdd === "1") {//以isAdd方式比较
-                                    Cache.onAddOne(cacheKey, doc)
-                                } else {
-                                    Cache.onEditOne(cacheKey, doc, pageProps.key)
+                                    if (isAdd) {//以isAdd方式比较
+                                        Cache.onAddOne(cacheKey, doc)
+                                    } else {
+                                        Cache.onEditOne(cacheKey, doc, pageProps.key)
+                                    }
                                 }
                             }
+                            
                             f7.toast.show({ text: "保存成功" })
 
                             if (onSaveSuccess) onSaveSuccess()
@@ -333,17 +336,15 @@ export function CommonItemEditPage<T extends ItemBase>(
                     {...e}
                     value={itemValue[e.name]||""}
                     onCalendarChange={(newValue) => {
-                        //const target = event.target as HTMLInputElement
-                        //const newValue = newDates.pop()
-
+ 
                         //console.log(newValue) //类型为：Date[]
 
                         if (newValue) {
                             //bugfix patch for F7:  没有调用onValidate, 手工指定
                             if (e.validate) checkValidResults[e.name] = true
 
-                            //bugfix patch for F7: 虽然指定了dataFormat进行格式化，但输出的格式并不是按照指定额格式输出
-                            //const newValue = dataFormat(newDate, e.calendarParams?.dateFormat as string | 'yyyy-MM-dd hh:mm:ss')
+                            //bugfix patch for F7: 虽然指定了dataFormat进行格式化，但输出的格式并不是按照指定格式输出
+                            //const newValue = dataFormat(newDate, e.calendarParams?.dateFormat as string | 'yyyy-mm-dd hh:mm:ss')
 
                             if (itemValue[e.name] !== newValue) {
                                 setTextDirty(true)
