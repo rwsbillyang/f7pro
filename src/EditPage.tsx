@@ -299,15 +299,16 @@ export function CommonItemEditPage<T extends ItemBase>(
     const metaToInput = (e: FieldMeta<T>, i: number, itemValue: Partial<T>): JSX.Element | null => {
         const isDisplay = !e.depend || (e.depend && e.depend(itemValue))
         //console.log("label="+e.label + ", isDisplay="+isDisplay + ",itemValue="+JSON.stringify(itemValue))
+        const initialValue = e.handleIntialValue? e.handleIntialValue(itemValue[e.name]) : itemValue[e.name]
         switch (e.type) {
-            case "radio":
+            case "switch":
                 return isDisplay ? <ListItem key={i}>
                     <span>{e.label}</span>
-                    <Toggle checked={itemValue[e.name]}
+                    <Toggle checked={initialValue}
                         onToggleChange={(v: boolean) => {
                             setTextDirty(true)
                             f7.data.dirty = true
-                            itemValue[e.name] = v
+                            itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(v) : v
                             setItem({ ...itemValue })
                         }} ></Toggle>
                 </ListItem> : null
@@ -315,7 +316,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                 return isDisplay ? objectMetaToInput(e, itemValue) : null
             case 'asyncSelect':
                 //onValidate: e.validate? (isValid) => checkValidResults[e.name] = isValid : undefined,
-                return isDisplay ? AsynSelectInput({ ...e, value: itemValue[e.name] }, (newValue?: string | number) => {
+                return isDisplay ? AsynSelectInput({ ...e, value: initialValue }, (newValue?: string | number) => {
                     if (e.required && !newValue) {
                         console.log("asyncSelect directly set " + e.name + " false")
                         checkValidResults[e.name] = false //bugfix patch for F7: 没有调用onValidate, 手工指定
@@ -324,17 +325,17 @@ export function CommonItemEditPage<T extends ItemBase>(
                         checkValidResults[e.name] = true //bugfix patch for F7:  没有调用onValidate, 手工指定
                     }
 
-                    if (itemValue[e.name] !== newValue) {
+                    if (initialValue !== newValue) {
                         setTextDirty(true)
                         f7.data.dirty = true
-                        itemValue[e.name] = newValue
+                        itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(newValue): newValue
                         setItem({ ...itemValue })
                     }
                 }, e.asyncSelectProps): null
             case 'datepicker':
                 return isDisplay ? <ListInput key={i}
                     {...e}
-                    value={itemValue[e.name]||""}
+                    value={initialValue||""}
                     onCalendarChange={(newValue) => {
  
                         //console.log(newValue) //类型为：Date[]
@@ -346,10 +347,10 @@ export function CommonItemEditPage<T extends ItemBase>(
                             //bugfix patch for F7: 虽然指定了dataFormat进行格式化，但输出的格式并不是按照指定格式输出
                             //const newValue = dataFormat(newDate, e.calendarParams?.dateFormat as string | 'yyyy-mm-dd hh:mm:ss')
 
-                            if (itemValue[e.name] !== newValue) {
+                            if (initialValue !== newValue) {
                                 setTextDirty(true)
                                 f7.data.dirty = true
-                                itemValue[e.name] = newValue
+                                itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(newValue): newValue
                                 setItem({ ...itemValue })
                             }
                         } else {
@@ -359,7 +360,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                             if (itemValue[e.name]) {
                                 setTextDirty(true)
                                 f7.data.dirty = true
-                                itemValue[e.name] = undefined
+                                itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(undefined): undefined
                                 setItem({ ...itemValue })
                             }
                         }
@@ -368,12 +369,12 @@ export function CommonItemEditPage<T extends ItemBase>(
             case 'texteditor':
                 return isDisplay ? <ListInput key={i}
                     {...e}
-                    value={itemValue[e.name]||""}
+                    value={initialValue||""}
                     onTextEditorChange={(newValue) => {
                         if (itemValue[e.name] !== newValue) {
                             setTextDirty(true)
                             f7.data.dirty = true
-                            itemValue[e.name] = newValue
+                            itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(newValue): newValue
                             setItem({ ...itemValue })
                         }
                     }}
@@ -381,7 +382,7 @@ export function CommonItemEditPage<T extends ItemBase>(
             default:
                 return isDisplay ? <ListInput key={i}
                     {...e}
-                    value={itemValue[e.name]||""}
+                    value={initialValue||""}
                     onChange={(event: SyntheticEvent) => {
                         const target = event.target as HTMLInputElement
                         const newValue = target.value.trim()
@@ -389,7 +390,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                         if (itemValue[e.name] !== newValue) {
                             setTextDirty(true)
                             f7.data.dirty = true
-                            itemValue[e.name] = newValue
+                            itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(newValue): newValue
                             setItem({ ...itemValue })
 
                             //console.log(e.name + " new value: "+target.value+", after trim: "+newValue)
@@ -399,7 +400,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                         if (itemValue[e.name]) {
                             setTextDirty(true)
                             f7.data.dirty = true
-                            itemValue[e.name] = undefined
+                            itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(undefined): undefined
                             setItem({ ...itemValue })
 
                         }
@@ -415,20 +416,21 @@ export function CommonItemEditPage<T extends ItemBase>(
         return <>
             {
                 objectMeta.objectProps?.map((subMeta: FieldMeta<T>, i) => {
+                    const initialValue = objectMeta.handleIntialValue? objectMeta.handleIntialValue(itemValue[objectMeta.name][subMeta.name]) : itemValue[objectMeta.name][subMeta.name]
                     switch (subMeta.type) {
-                        case "radio":
+                        case "switch":
                             return (!subMeta.depend || (subMeta.depend && subMeta.depend(itemValue))) ? <ListItem key={i}>
                                 <span>{subMeta.label}</span>
-                                <Toggle checked={(itemValue[objectMeta.name]) ? !!itemValue[objectMeta.name][subMeta.name] : false}
-                                    onToggleChange={(v: boolean) => {
+                                <Toggle checked={initialValue? !![subMeta.name] : false}
+                                    onToggleChange={(newValue: boolean) => {
                                         setTextDirty(true)
                                         f7.data.dirty = true
                                         if (itemValue[objectMeta.name]) {
-                                            itemValue[objectMeta.name][subMeta.name] = v
+                                            itemValue[objectMeta.name][subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
                                             setItem({ ...itemValue })
                                         } else {
                                             const obj = {}
-                                            obj[subMeta.name] = v
+                                            obj[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
                                             itemValue[objectMeta.name] = obj
                                             setItem({ ...itemValue })
                                         }
@@ -437,7 +439,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                         case 'object':
                             return objectMetaToInput(subMeta, itemValue)
                         case 'asyncSelect':
-                            return AsynSelectInput({ ...subMeta, value: (itemValue && itemValue[objectMeta.name]) ? itemValue[objectMeta.name][subMeta.name] : undefined },
+                            return AsynSelectInput({ ...subMeta, value:initialValue },
                             (newValue?: string | number) => {
                                 if (subMeta.required && !newValue) {
                                     if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = false //bugfix patch for F7:  没有调用onValidate, 手工指定
@@ -448,7 +450,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                                 if (itemValue[subMeta.name] !== newValue) {
                                     setTextDirty(true)
                                     f7.data.dirty = true
-                                    itemValue[subMeta.name] = newValue
+                                    itemValue[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
                                     setItem({ ...itemValue })
                                 }
                             }, subMeta.asyncSelectProps)
@@ -456,7 +458,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                         case 'datepicker':
                             return <ListInput key={i}
                                 {...subMeta}
-                                value={itemValue[subMeta.name] || ""}
+                                value={initialValue|| ""}
                                 onCalendarChange={(newDates: Date[]) => {
                                     //const target = event.target as HTMLInputElement
                                     const newValue = newDates.pop()
@@ -473,7 +475,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                                         if (itemValue[subMeta.name] !== newValue) {
                                             setTextDirty(true)
                                             f7.data.dirty = true
-                                            itemValue[subMeta.name] = newValue
+                                            itemValue[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
                                             setItem({ ...itemValue })
                                         }
                                     } else {
@@ -483,7 +485,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                                         if (itemValue[subMeta.name]) {
                                             setTextDirty(true)
                                             f7.data.dirty = true
-                                            itemValue[subMeta.name] = undefined
+                                            itemValue[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(undefined): undefined
                                             setItem({ ...itemValue })
                                         }
                                     }
@@ -493,7 +495,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                                     if (itemValue[subMeta.name]) {
                                         setTextDirty(true)
                                         f7.data.dirty = true
-                                        itemValue[subMeta.name] = undefined
+                                        itemValue[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(undefined): undefined
                                         setItem({ ...itemValue })
 
                                         if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = false ///bugfix patch for F7: 没有调用onValidate, 手工指定
@@ -503,20 +505,20 @@ export function CommonItemEditPage<T extends ItemBase>(
                             case 'texteditor':
                                 return (!subMeta.depend || (subMeta.depend && subMeta.depend(itemValue))) ? <ListInput key={i}
                                 {...subMeta}
-                                value={((itemValue && itemValue[objectMeta.name]) ? itemValue[objectMeta.name][subMeta.name] : "") || ""}
+                                value={initialValue || ""}
                                 onTextEditorChange={(newValue) => {
                                     if (itemValue[objectMeta.name]) {
-                                        if (itemValue[objectMeta.name][subMeta.name] !== newValue) {
+                                        if (initialValue !== newValue) {
                                             setTextDirty(true)
                                             f7.data.dirty = true
-                                            itemValue[objectMeta.name][subMeta.name] = newValue
+                                            itemValue[objectMeta.name][subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
                                             setItem({ ...itemValue })
                                         }
                                     } else {
                                         if (newValue) {
                                             setTextDirty(true)
                                             const obj = {}
-                                            obj[subMeta.name] = newValue
+                                            obj[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
                                             if (itemValue) {
                                                 itemValue[objectMeta.name] = obj
                                                 setItem({ ...itemValue })
@@ -533,22 +535,22 @@ export function CommonItemEditPage<T extends ItemBase>(
                         default:
                             return (!subMeta.depend || (subMeta.depend && subMeta.depend(itemValue))) ? <ListInput key={i}
                                 {...subMeta}
-                                value={((itemValue && itemValue[objectMeta.name]) ? itemValue[objectMeta.name][subMeta.name] : "") || ""}
+                                value={initialValue || ""}
                                 onChange={(event: SyntheticEvent) => {
                                     const target = event.target as HTMLInputElement
                                     const newValue = target.value.trim()
                                     if (itemValue[objectMeta.name]) {
-                                        if (itemValue[objectMeta.name][subMeta.name] !== newValue) {
+                                        if (initialValue !== newValue) {
                                             setTextDirty(true)
                                             f7.data.dirty = true
-                                            itemValue[objectMeta.name][subMeta.name] = newValue
+                                            itemValue[objectMeta.name][subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
                                             setItem({ ...itemValue })
                                         }
                                     } else {
                                         if (newValue) {
                                             setTextDirty(true)
                                             const obj = {}
-                                            obj[subMeta.name] = newValue
+                                            obj[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
                                             if (itemValue) {
                                                 itemValue[objectMeta.name] = obj
                                                 setItem({ ...itemValue })
@@ -565,7 +567,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                                     if (itemValue[objectMeta.name]) {
                                         setTextDirty(true)
                                         f7.data.dirty = true
-                                        itemValue[objectMeta.name] = undefined
+                                        itemValue[objectMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(undefined): undefined
                                         setItem({ ...itemValue })
                                     }
                                 }}

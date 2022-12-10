@@ -149,11 +149,13 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         if (pageProps.delApi) {
             leftArry.push({ name: "删除", color: "red", onClick: (e) => { deleteOne(pageProps, e) } })
         }
-        if (pageProps.swipeItemsLeft && pageProps.swipeItemsLeft.length > 0) {
-            leftArry = leftArry.concat(pageProps.swipeItemsLeft)
+        if (pageProps.swipeItemsLeft) {
+            const left = pageProps.swipeItemsLeft(itemValue)
+            if(left.length > 0)
+                leftArry = leftArry.concat(left)
         }
-
-        const rightArry = pageProps.swipeItemsRight || []
+        
+        const rightArry = pageProps.swipeItemsRight? pageProps.swipeItemsRight(itemValue) : []
 
         return <>
             <SwipeoutActions left>

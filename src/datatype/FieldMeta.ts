@@ -19,4 +19,10 @@ export interface FieldMeta<T> extends ListInputProps{
     isSearchKey?: boolean; //当为true时，则作为搜索字段进行搜索
 
     name: string;//字段名称, 改为必须指定
+
+    //初始值经过处理后作为初值，赋给ListInput，如：将后端的字符数组变换成空格隔开的字符串
+    handleIntialValue?: (fieldValue: any|undefined)=> any|undefined 
+
+    //ListInput中的值修改后，经过处理变换后保存，如：将input中的输入的空格隔开的字符串变换成数组
+    handleChangedValue?:(fieldValue: any|undefined)=> any|undefined 
 }
