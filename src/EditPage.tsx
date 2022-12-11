@@ -96,8 +96,8 @@ export function CommonItemEditPage<T extends ItemBase>(
     pageProps: EditPageProps<T>,
     fields: FieldMeta<T>[],
     originalItem: Partial<T>,
+    isAdd: boolean, //从列表页中传递过来的参数
     listProps?: ListProps,
-    isAdd?: boolean,
     onSaveSuccess?: (() => void)
 ) {
     const [item, setItem] = useState({ ...originalItem })
@@ -220,7 +220,7 @@ export function CommonItemEditPage<T extends ItemBase>(
     useEffect(() => {
         initValidResultsAndCfgPasteHandler(checkValidResults, errMsgs, pasteHandlerConfig, fields, item)
         addPasteEventListeners()
-        document.title = "编辑" + pageProps.name
+        document.title = (isAdd? "新增": "编辑") + pageProps.name
     }, [])
 
     const saveIfEdited = (continueAdd: boolean) => {
@@ -258,7 +258,7 @@ export function CommonItemEditPage<T extends ItemBase>(
                             //若不中继转发，则继续通过_id进行判断，目的是兼容旧的代码，以及多数情况下无需通过isAdd判断
                             //只有新增时也有_id的情况，才通过isAdd方式来判断
                             if(cacheKey){
-                                if (isAdd) {//通过旧的方式：通过_id判断
+                                if (isAdd === undefined) {//EditPage中未接收isAdd参数，未将isAdd传递过来
                                     if (item[pageProps.key || UseCacheConfig.defaultIdentiyKey] === undefined) {//以XXX._id作为比较
                                         //item._id = id
                                         Cache.onAddOne(cacheKey, doc)

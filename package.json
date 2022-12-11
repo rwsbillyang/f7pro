@@ -1,6 +1,6 @@
 {
   "name": "f7pro",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "using json config file to setup List/Edit Page based on Framework7 react, support basic CRUD features etc.",
   "repository": {
     "type": "git",

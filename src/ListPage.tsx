@@ -144,7 +144,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         let leftArry: SwipeItem<T>[] = []
 
         if (!noEditPath) {
-            leftArry.push({ name: "编辑", color: "yellow", onClick: (e) => { f7.views.main.router.navigate(editPath(e), { props: { item: e, isAdd: "0" } }) } })
+            leftArry.push({ name: "编辑", color: "yellow", onClick: (e) => { f7.views.main.router.navigate(editPath(e), { props: { item: e, isAdd: false } }) } })
         }
         if (pageProps.delApi) {
             leftArry.push({ name: "删除", color: "red", onClick: (e) => { deleteOne(pageProps, e) } })
@@ -253,7 +253,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
             pageProps.editPath &&
             <Toolbar bottom>
                 <Button />
-                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath(initialValue || {}) : undefined} routeProps={{ isAdd: "1", item: initialValue }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
+                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath(initialValue || {}) : undefined} routeProps={{ isAdd: true, item: initialValue }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
                 <Button />
             </Toolbar>
         }
