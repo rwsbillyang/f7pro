@@ -581,7 +581,7 @@ export function CommonItemEditPage<T extends ItemBase>(
     }
 
     return <Page name={pageProps.id} id={pageProps.id} noNavbar={!pageProps.hasNavBar}>
-        {pageProps.hasNavBar && <Navbar title={"编辑" + pageProps.name} backLink={f7ProConfig.TextBack} />}
+        {pageProps.hasNavBar && <Navbar title={(isAdd? "新增": "编辑")  + pageProps.name} backLink={f7ProConfig.TextBack} />}
         <List {...listProps}>
             {fields.map((e, i) => metaToInput(e, i, item))}
         </List>
