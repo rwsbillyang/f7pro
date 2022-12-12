@@ -169,7 +169,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     }
 
 
-    const itemSlotFunc = listItemSlotViewFunc || swipeoutSlotFunc
+    //const itemSlotFunc = listItemSlotViewFunc || swipeoutSlotFunc
 
 
     return <Page name={pageProps.id} id={pageProps.id}
@@ -205,7 +205,8 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                         : <List {...listProps} mediaList>
                             {list?.map((e: T, i: number) => {
                                 return <ListItem key={i} {...mergeListItemPropsFunc(e)} >
-                                    {itemSlotFunc(e, pageProps)}
+                                    { swipeoutSlotFunc(e, pageProps)}
+                                    { listItemSlotViewFunc && listItemSlotViewFunc(e, pageProps) }
                                 </ListItem>
                             })}
                             {(pageProps.delApi || pageProps.editPath) && <div slot="after-list" style={{ fontSize: "12px", color: "gray", textAlign: "center" }}>向右滑动列表可编辑或删除 </div>}
