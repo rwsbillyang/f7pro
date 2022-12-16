@@ -59,14 +59,14 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
                         }} ></Toggle>
                 </ListItem>
             case 'asyncSelect':
-                return AsynSelectInput({ ...e, value: queryRef[e.name] },
+                return AsynSelectInput({ ...e, value: queryRef[e.name]},
                     (newValue?: string | number) => {
                         if (queryRef[e.name] !== newValue) {
                             queryRef[e.name] = newValue
                             
                             onValueChanged()
                         }
-                    }, e.asyncSelectProps)
+                    }, i, e.asyncSelectProps)
             case 'sort':
                 e.type = "select"
                 return e.sortOptions ? <ListInput key={i}

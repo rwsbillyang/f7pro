@@ -98,7 +98,9 @@ export function CommonItemEditPage<T extends ItemBase>(
     originalItem: Partial<T>,
     isAdd: boolean, //从列表页中传递过来的参数
     listProps?: ListProps,
-    onSaveSuccess?: (() => void)
+    onSaveSuccess?: (() => void),
+    TopView?: React.FC<{ originalItem?: Partial<T>, pageProps?: EditPageProps<T>, fields?: FieldMeta<T>[] }>,
+    BottomView?: React.FC<{ originalItem?: Partial<T>, pageProps?: EditPageProps<T>, fields?: FieldMeta<T>[] }>
 ) {
     const [item, setItem] = useState({ ...originalItem })
     const [textDirty, setTextDirty] = useState(false)
@@ -296,12 +298,13 @@ export function CommonItemEditPage<T extends ItemBase>(
 
 
 
-    const metaToInput = (e: FieldMeta<T>, i: number, itemValue: Partial<T>): JSX.Element | null => {
+    const metaToListInput = (e: FieldMeta<T>, i: number, itemValue: Partial<T>): JSX.Element | null => {
         const isDisplay = !e.depend || (e.depend && e.depend(itemValue))
         //console.log("label="+e.label + ", isDisplay="+isDisplay + ",itemValue="+JSON.stringify(itemValue))
         const initialValue = e.handleIntialValue? e.handleIntialValue(itemValue[e.name]) : itemValue[e.name]
         switch (e.type) {
             case "switch":
+            case "toggle":
                 return isDisplay ? <ListItem key={i}>
                     <span>{e.label}</span>
                     <Toggle checked={initialValue}
@@ -312,10 +315,11 @@ export function CommonItemEditPage<T extends ItemBase>(
                             setItem({ ...itemValue })
                         }} ></Toggle>
                 </ListItem> : null
-            case 'object':
-                return isDisplay ? objectMetaToInput(e, itemValue) : null
+            case 'object': //TODO: add ui offset or frame order
+                return (isDisplay && e.objectProps && e.objectProps.length > 0) 
+                ? <>{e.objectProps.map((subMeta: FieldMeta<T>, j) => metaToListInput(subMeta, i*100+j, itemValue[e.name] || {}))}</>
+                 : null
             case 'asyncSelect':
-                //onValidate: e.validate? (isValid) => checkValidResults[e.name] = isValid : undefined,
                 return isDisplay ? AsynSelectInput({ ...e, value: initialValue }, (newValue?: string | number) => {
                     if (e.required && !newValue) {
                         console.log("asyncSelect directly set " + e.name + " false")
@@ -337,16 +341,8 @@ export function CommonItemEditPage<T extends ItemBase>(
                     {...e}
                     value={initialValue||""}
                     onCalendarChange={(newValue) => {
- 
-                        //console.log(newValue) //类型为：Date[]
-
                         if (newValue) {
-                            //bugfix patch for F7:  没有调用onValidate, 手工指定
                             if (e.validate) checkValidResults[e.name] = true
-
-                            //bugfix patch for F7: 虽然指定了dataFormat进行格式化，但输出的格式并不是按照指定格式输出
-                            //const newValue = dataFormat(newDate, e.calendarParams?.dateFormat as string | 'yyyy-mm-dd hh:mm:ss')
-
                             if (initialValue !== newValue) {
                                 setTextDirty(true)
                                 f7.data.dirty = true
@@ -354,7 +350,6 @@ export function CommonItemEditPage<T extends ItemBase>(
                                 setItem({ ...itemValue })
                             }
                         } else {
-                            //bugfix patch for F7:  没有调用onValidate, 手工指定
                             if (e.validate) checkValidResults[e.name] = false
 
                             if (itemValue[e.name]) {
@@ -366,6 +361,30 @@ export function CommonItemEditPage<T extends ItemBase>(
                         }
                     }}
                 /> : null
+                case 'colorpicker':
+                    return isDisplay ? <ListInput key={i}
+                        {...e}
+                        value={initialValue||""}
+                        onColorPickerChange={(newValue) => {
+                            if (newValue) {
+                                if (e.validate) checkValidResults[e.name] = true  
+                                if (initialValue !== newValue) {
+                                    setTextDirty(true)
+                                    f7.data.dirty = true
+                                    itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(newValue): newValue
+                                    setItem({ ...itemValue })
+                                }
+                            } else {
+                                if (e.validate) checkValidResults[e.name] = false   
+                                if (itemValue[e.name]) {
+                                    setTextDirty(true)
+                                    f7.data.dirty = true
+                                    itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(undefined): undefined
+                                    setItem({ ...itemValue })
+                                }
+                            }
+                        }}
+                    /> : null    
             case 'texteditor':
                 return isDisplay ? <ListInput key={i}
                     {...e}
@@ -385,15 +404,13 @@ export function CommonItemEditPage<T extends ItemBase>(
                     value={initialValue||""}
                     onChange={(event: SyntheticEvent) => {
                         const target = event.target as HTMLInputElement
-                        const newValue = target.value.trim()
+                        const newValue = target.value
 
                         if (itemValue[e.name] !== newValue) {
                             setTextDirty(true)
                             f7.data.dirty = true
                             itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(newValue): newValue
                             setItem({ ...itemValue })
-
-                            //console.log(e.name + " new value: "+target.value+", after trim: "+newValue)
                         }
                     }}
                     onInputClear={() => {
@@ -402,7 +419,6 @@ export function CommonItemEditPage<T extends ItemBase>(
                             f7.data.dirty = true
                             itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(undefined): undefined
                             setItem({ ...itemValue })
-
                         }
                     }}
                 >
@@ -411,185 +427,17 @@ export function CommonItemEditPage<T extends ItemBase>(
         }
     }
 
-    //objectMeta： 父meta中的一个元素项，对应的是一个object
-    const objectMetaToInput = (objectMeta: FieldMeta<T>, itemValue: Partial<T>): JSX.Element => {
-        return <>
-            {
-                objectMeta.objectProps?.map((subMeta: FieldMeta<T>, i) => {
-                    const initialValue = objectMeta.handleIntialValue? objectMeta.handleIntialValue(itemValue[objectMeta.name][subMeta.name]) : itemValue[objectMeta.name][subMeta.name]
-                    switch (subMeta.type) {
-                        case "switch":
-                            return (!subMeta.depend || (subMeta.depend && subMeta.depend(itemValue))) ? <ListItem key={i}>
-                                <span>{subMeta.label}</span>
-                                <Toggle checked={initialValue? !![subMeta.name] : false}
-                                    onToggleChange={(newValue: boolean) => {
-                                        setTextDirty(true)
-                                        f7.data.dirty = true
-                                        if (itemValue[objectMeta.name]) {
-                                            itemValue[objectMeta.name][subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
-                                            setItem({ ...itemValue })
-                                        } else {
-                                            const obj = {}
-                                            obj[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
-                                            itemValue[objectMeta.name] = obj
-                                            setItem({ ...itemValue })
-                                        }
-                                    }} ></Toggle>
-                            </ListItem> : null
-                        case 'object':
-                            return objectMetaToInput(subMeta, itemValue)
-                        case 'asyncSelect':
-                            return AsynSelectInput({ ...subMeta, value:initialValue },
-                            (newValue?: string | number) => {
-                                if (subMeta.required && !newValue) {
-                                    if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = false //bugfix patch for F7:  没有调用onValidate, 手工指定
-                                } else {
-                                    if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = true  //bugfix patch for F7: 没有调用onValidate, 手工指定
-                                }
-
-                                if (itemValue[subMeta.name] !== newValue) {
-                                    setTextDirty(true)
-                                    f7.data.dirty = true
-                                    itemValue[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
-                                    setItem({ ...itemValue })
-                                }
-                            }, subMeta.asyncSelectProps)
-                                
-                        case 'datepicker':
-                            return <ListInput key={i}
-                                {...subMeta}
-                                value={initialValue|| ""}
-                                onCalendarChange={(newDates: Date[]) => {
-                                    //const target = event.target as HTMLInputElement
-                                    const newValue = newDates.pop()
-
-                                    //console.log(newDate)
-
-                                    if (newValue) {
-                                        //bugfix patch for F7: 没有调用onValidate, 手工指定
-                                        if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = true
-
-                                        //bugfix patch for F7: 虽然指定了dataFormat进行格式化，但输出的格式并不是按照指定额格式输出
-                                        //const newValue = dataFormat(newDate, subMeta.calendarParams?.dateFormat as string | 'yyyy-MM-dd hh:mm:ss')
-
-                                        if (itemValue[subMeta.name] !== newValue) {
-                                            setTextDirty(true)
-                                            f7.data.dirty = true
-                                            itemValue[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
-                                            setItem({ ...itemValue })
-                                        }
-                                    } else {
-                                        //bugfix patch for F7: 没有调用onValidate, 手工指定
-                                        if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = false
-
-                                        if (itemValue[subMeta.name]) {
-                                            setTextDirty(true)
-                                            f7.data.dirty = true
-                                            itemValue[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(undefined): undefined
-                                            setItem({ ...itemValue })
-                                        }
-                                    }
-
-                                }}
-                                onInputClear={() => {
-                                    if (itemValue[subMeta.name]) {
-                                        setTextDirty(true)
-                                        f7.data.dirty = true
-                                        itemValue[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(undefined): undefined
-                                        setItem({ ...itemValue })
-
-                                        if (subMeta.validate) checkValidResults[objectMeta.name + "-" + subMeta.name] = false ///bugfix patch for F7: 没有调用onValidate, 手工指定
-                                    }
-                                }}
-                            />
-                            case 'texteditor':
-                                return (!subMeta.depend || (subMeta.depend && subMeta.depend(itemValue))) ? <ListInput key={i}
-                                {...subMeta}
-                                value={initialValue || ""}
-                                onTextEditorChange={(newValue) => {
-                                    if (itemValue[objectMeta.name]) {
-                                        if (initialValue !== newValue) {
-                                            setTextDirty(true)
-                                            f7.data.dirty = true
-                                            itemValue[objectMeta.name][subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
-                                            setItem({ ...itemValue })
-                                        }
-                                    } else {
-                                        if (newValue) {
-                                            setTextDirty(true)
-                                            const obj = {}
-                                            obj[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
-                                            if (itemValue) {
-                                                itemValue[objectMeta.name] = obj
-                                                setItem({ ...itemValue })
-                                            } else {
-                                                const newItem = {}
-                                                newItem[objectMeta.name] = obj
-                                                setItem(newItem)
-                                            }
-                                        }
-
-                                    }
-                                }} /> : null
-
-                        default:
-                            return (!subMeta.depend || (subMeta.depend && subMeta.depend(itemValue))) ? <ListInput key={i}
-                                {...subMeta}
-                                value={initialValue || ""}
-                                onChange={(event: SyntheticEvent) => {
-                                    const target = event.target as HTMLInputElement
-                                    const newValue = target.value.trim()
-                                    if (itemValue[objectMeta.name]) {
-                                        if (initialValue !== newValue) {
-                                            setTextDirty(true)
-                                            f7.data.dirty = true
-                                            itemValue[objectMeta.name][subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
-                                            setItem({ ...itemValue })
-                                        }
-                                    } else {
-                                        if (newValue) {
-                                            setTextDirty(true)
-                                            const obj = {}
-                                            obj[subMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(newValue): newValue
-                                            if (itemValue) {
-                                                itemValue[objectMeta.name] = obj
-                                                setItem({ ...itemValue })
-                                            } else {
-                                                const newItem = {}
-                                                newItem[objectMeta.name] = obj
-                                                setItem(newItem)
-                                            }
-                                        }
-
-                                    }
-                                }}
-                                onInputClear={() => {
-                                    if (itemValue[objectMeta.name]) {
-                                        setTextDirty(true)
-                                        f7.data.dirty = true
-                                        itemValue[objectMeta.name] = objectMeta.handleChangedValue? objectMeta.handleChangedValue(undefined): undefined
-                                        setItem({ ...itemValue })
-                                    }
-                                }}
-                            >
-                                {subMeta.type === 'select' && subMeta.selectOptions?.map((option: SelectOption, i: number) => <option key={i} value={option.value || option.label}>{option.label}</option>)}
-                            </ListInput> : null
-                    }
-                })
-            }
-        </>
-    }
-
     return <Page name={pageProps.id} id={pageProps.id} noNavbar={!pageProps.hasNavBar}>
         {pageProps.hasNavBar && <Navbar title={(isAdd? "新增": "编辑")  + pageProps.name} backLink={f7ProConfig.TextBack} />}
+        {TopView && <TopView originalItem={originalItem} pageProps={pageProps} fields={fields} />}
         <List {...listProps}>
-            {fields.map((e, i) => metaToInput(e, i, item))}
+            {fields.map((e, i) => metaToListInput(e, i, item))}
         </List>
+        {BottomView && <BottomView originalItem={originalItem} pageProps={pageProps} fields={fields} />}
         <Toolbar bottom>
             <Button />
             <Button large onClick={() => saveIfEdited(false)}>{pageProps.saveText || "保  存"}</Button>
             <Button />
-            {/* <Button large onClick={()=>saveIfEdited(true)}>保存&新增</Button> */}
         </Toolbar>
     </Page>
 

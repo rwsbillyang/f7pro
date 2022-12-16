@@ -26,7 +26,7 @@ import { SelectOption } from "../datatype/SelectOption"
 //     asyncProps?: MyAsyncSelectProps
 // }> = (props) => {
 export const AsynSelectInput = (inputProps: ListInputProps, 
-    onValueChange: (newValue?: string|number) => void,
+    onValueChange: (newValue?: string|number) => void, key: any,
     asyncProps?: MyAsyncSelectProps)  => {
     
    
@@ -95,6 +95,7 @@ export const AsynSelectInput = (inputProps: ListInputProps,
 
     return (
         <ListInput
+            key={key}
             {...inputProps}
             type="select"
             

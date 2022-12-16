@@ -167,11 +167,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
             </SwipeoutActions>
         </>
     }
-
-
-    //const itemSlotFunc = listItemSlotViewFunc || swipeoutSlotFunc
-
-
+    
     return <Page name={pageProps.id} id={pageProps.id}
         noNavbar={(!pageProps.hasNavBar && !MyNavBar)}
         stacked={false}
