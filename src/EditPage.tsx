@@ -364,14 +364,14 @@ export function CommonItemEditPage<T extends ItemBase>(
                 case 'colorpicker':
                     return isDisplay ? <ListInput key={i}
                         {...e}
-                        value={initialValue||""}
+                        value={{ hex: initialValue }}
                         onColorPickerChange={(newValue) => {
-                            if (newValue) {
+                            if (newValue.hex) {
                                 if (e.validate) checkValidResults[e.name] = true  
-                                if (initialValue !== newValue) {
+                                if (initialValue !== newValue.hex) {
                                     setTextDirty(true)
                                     f7.data.dirty = true
-                                    itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(newValue): newValue
+                                    itemValue[e.name] = e.handleChangedValue? e.handleChangedValue(newValue.hex): newValue.hex
                                     setItem({ ...itemValue })
                                 }
                             } else {
