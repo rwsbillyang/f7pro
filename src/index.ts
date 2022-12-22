@@ -1,5 +1,5 @@
 import { PageProps } from "framework7-react/components/page";
-import { AsynSelectInput } from "./components/AsyncSelectInput";
+import  AsynSelectInput  from "./components/AsyncSelectInput";
 import { ListItemUploader } from "./components/ListItemUploader";
 import { LoadMore } from "./components/LoadMore";
 import { MySearchbar, MySearchbar2, searchKey } from "./components/MySearchbar";

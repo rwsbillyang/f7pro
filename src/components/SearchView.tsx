@@ -7,7 +7,7 @@ import React, { SyntheticEvent } from 'react';
 import { PaginationQueryBase } from "@rwsbillyang/usecache";
 
 import { dispatch } from 'use-bus';
-import { AsynSelectInput } from './AsyncSelectInput';
+import  AsynSelectInput  from './AsyncSelectInput';
 
 import { FieldMeta } from '../datatype/FieldMeta';
 import { ItemBase } from "../datatype/ItemBase";
@@ -128,6 +128,7 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
                 <List inlineLabels noHairlinesMd>
                     {
                         searchFields.map(metaToInput)
+                        //searchFields.map((e, i) => FieldMetaToListInput(e, i, itemRef.current, onValueChange))
                     }
                 </List>
             </CardContent>
