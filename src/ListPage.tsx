@@ -48,7 +48,6 @@ export function deleteOne<T extends ItemBase>(pageProps: ListPageProps<T>, item?
  * @param pageProps Page页面属性，
  * @param listProps  F7的List组件的属性，如指定mediaList
  * @param listItemPropsFunc 用于构建ListItem中的属性，如title， subtitle，after，text，after等
- * @param initialValue 传入的初始数据，用于新增时将一些非编辑的其它参数传递进来。如新增公众号菜单时，需要将当前公众号appId传递进来 用Partial主要因为新增时大部分字段为空
  * @param initialQuery 列表查询条件 为空则表示未指定
  * @param listItemSlotViewFunc 如果ListItem的属性函数listItemPropsFunc不能满足要求，可以使用listItemSlotViewFunc指定slot，还不满足要求，可使用CustomListView
  * @param CustomListView 当<List>以及listItemPropsFunc和listItemSlotViewFunc不能满足要求时，自行提供一个List
@@ -65,15 +64,14 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         pageProps: ListPageProps<T>,
         listProps?: ListProps,
         listItemPropsFunc?: (e: T) => ListItemProps,
-        initialValue?: Partial<T>,
         initialQuery?: Q,
         listItemSlotViewFunc?: (e: T, pageProps: ListPageProps<T>) => JSX.Element,
         CustomListView?: React.FC<{ list: T[], pageProps: ListPageProps<T> }>,
-        MyNavBar?: React.FC<{ pageProps: ListPageProps<T>, initialValue?: Partial<T> }>,
+        MyNavBar?: React.FC<{ pageProps: ListPageProps<T>}>,
         addMax?: number,
         searchFields?: FieldMeta<T>[],
-        ListTopView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>, initialValue?: Partial<T> }>,
-        ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>, initialValue?: Partial<T> }>
+        ListTopView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>}>,
+        ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>}>
     ) {
 
     // let currentQuery: Q = { ...initialQuery } as Q
@@ -173,7 +171,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         stacked={false}
         onPageReinit={pageReInit}
     >
-        {(MyNavBar ? <MyNavBar pageProps={pageProps} initialValue={initialValue} />
+        {(MyNavBar ? <MyNavBar pageProps={pageProps} />
             : (pageProps.hasNavBar ? <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} /> : null))}
 
         {
@@ -193,7 +191,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                 }
             })
         }
-        {ListTopView && <ListTopView list={list} pageProps={pageProps} initialValue={initialValue} />}
+        {ListTopView && <ListTopView list={list} pageProps={pageProps} />}
         {
             (list && list.length > 0) ?
                 <>
@@ -245,12 +243,12 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                 </>
                 : <NoDataOrErr isLoading={isLoading} isError={isError} errMsg={errMsg} />
         }
-        {ListBottomView && <ListBottomView list={list} pageProps={pageProps} initialValue={initialValue} />}
+        {ListBottomView && <ListBottomView list={list} pageProps={pageProps}  />}
         {
             pageProps.editPath &&
             <Toolbar bottom>
                 <Button />
-                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath(initialValue || {}) : undefined} routeProps={{ isAdd: true, item: initialValue }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
+                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath() : undefined} routeProps={{ isAdd: true }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
                 <Button />
             </Toolbar>
         }

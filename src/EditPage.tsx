@@ -21,7 +21,7 @@ function doPaste<T extends ItemBase>(
     cfgPasteHandler: (text: string) => Partial<T>,
     name: string, //在何处粘贴
     data: Partial<T>, //解析后的值放在data中
-    checkValidResults: {} //校验结果
+   // checkValidResults: {} //校验结果
 ) {
     const text = event.clipboardData.getData("text")//得到剪贴板数据
     const part = cfgPasteHandler(text)//调用配置的handler解析数据
@@ -29,13 +29,13 @@ function doPaste<T extends ItemBase>(
 
     if (keys.length === 0) {//未能解析到值
         data[name] = text
-        checkValidResults[name] = true
+      //  checkValidResults[name] = true
     } else {
         for (let i = 0; i < keys.length; i++) {
             const k = keys[i]
             data[k] = part[k]
             //TODO: 调用pattern检查合法性
-            if (part[k]) checkValidResults[name] = true
+           // if (part[k]) checkValidResults[name] = true
             //f7.input.checkEmptyState(key)
         }
     }
@@ -46,19 +46,19 @@ function doPaste<T extends ItemBase>(
 function addPasteHandler<T extends ItemBase>(
     fields: FieldMeta<T>[],
     item: Partial<T>,
-    checkValidResults: {},
+    //checkValidResults: {},
     parentFieldName?: string) {
     const handles: any = []
     for (let i = 0; i < fields.length; i++) {
         const e: FieldMeta<T> = fields[i]
         if (e.type === "object" && e.objectProps && e.objectProps.length > 0) {
-            addPasteHandler(e.objectProps, item[e.name], checkValidResults, e.name)
+            addPasteHandler(e.objectProps, item[e.name], e.name)
         } else {
             const handler = e.cfgPasteHandler
             if (handler) {
                 const filedName = parentFieldName ? (parentFieldName + "-" + e.name) : e.name
 
-                const f = (event: any) => doPaste(event, handler, e.name, item, checkValidResults)
+                const f = (event: any) => doPaste(event, handler, e.name, item)
                 //https://developer.mozilla.org/zh-CN/docs/Web/API/Element/paste_event
                 //
                 //通过给ListInput指定onPaste属性不工作，像没添加一样，因F7不支持该属性，即使强行指定也不工作
@@ -76,36 +76,18 @@ function addPasteHandler<T extends ItemBase>(
     }
 }
 
-function initCheckValidResults<T>(itemValue: T, fields: FieldMeta<T>[], checkValidResults: {}, errMsgs: {}, parentFieldName?: string){
-    for (let i = 0; i < fields.length; i++) {
-        const e: FieldMeta<T> = fields[i]
-        const filedName = parentFieldName ? (parentFieldName + "-" + e.name) : e.name
 
-        if (e.type === "object" && e.objectProps && e.objectProps.length > 0) {
-            initProps(itemValue[e.name], e.objectProps, checkValidResults, errMsgs, e.name)
-        } else {
-            if (e.required) {
-                if (itemValue[e.name] || e.defaultValue)
-                    checkValidResults[filedName] = true
-                else
-                    checkValidResults[filedName] = false
-            } else {
-                checkValidResults[filedName] = true
-            }
-        }  
-    }
-}
 
 /**
  * 根据已经指定的属性，添加额外的属性，包括是否required，给label添加*，初始化validate的初始结果，并指定onValidate属性
  * @param fields 
  * @returns 
  */
-function initProps<T>(itemValue: T, fields: FieldMeta<T>[], checkValidResults: {}, errMsgs: {}, parentFieldName?: string) {
+function initProps<T>(itemValue: T, fields: FieldMeta<T>[],  errMsgs: {}, parentFieldName?: string) {
     for (let i = 0; i < fields.length; i++) {
         const e: FieldMeta<T> = fields[i]
         if (e.type === "object" && e.objectProps && e.objectProps.length > 0) {
-            initProps(itemValue[e.name], e.objectProps, checkValidResults, errMsgs, e.name)
+            initProps(itemValue[e.name], e.objectProps, errMsgs, e.name)
         } else {
             const filedName = parentFieldName ? (parentFieldName + "-" + e.name) : e.name
 
@@ -118,29 +100,17 @@ function initProps<T>(itemValue: T, fields: FieldMeta<T>[], checkValidResults: {
 
             //如果指定了validate，需要验证，则初始值指定为false，同时指定onValidate，更新valid结果
             if (e.validate) {
-                e.onValidate = (isValid) => {
-                    checkValidResults[filedName] = isValid
-                    if (f7ProConfig.EnableLog) console.log(`filedName: ${filedName}.onValidate(${isValid})`)
-                   // if (f7ProConfig.EnableLog) console.log(`${e.name}.onValidate(${isValid}), checkValidResults: ${JSON.stringify(checkValidResults)}`)
-                }
+                // e.onValidate = (isValid) => {
+                //     checkValidResults[filedName] = isValid
+                //     if (f7ProConfig.EnableLog) console.log(`filedName: ${filedName}.onValidate(${isValid})`)
+                //    // if (f7ProConfig.EnableLog) console.log(`${e.name}.onValidate(${isValid}), checkValidResults: ${JSON.stringify(checkValidResults)}`)
+                // }
                 errMsgs[e.name] = "请检查：" + e.label + " ，" + e.errorMessage || "请检查：" + e.label
             }
         }
     }
 }
 
-const getInvalidKey = (results: {}) => {
-    const keys = Object.keys(results);
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i]
-        if (results[key] === false) {
-            if (f7ProConfig.EnableLog) console.log("getInvalidKey:" + key + " is invalid")
-            return key
-        }
-    }
-    if (f7ProConfig.EnableLog) console.log("checkValid: all pass")
-    return undefined
-}
 
 function save<T extends ItemBase>(item: Partial<T>, isAdd: boolean, pageProps: EditPageProps<T>, onSaveSuccess?: (() => void)) {
     const post = UseCacheConfig.request?.post
@@ -208,16 +178,16 @@ export function CommonItemEditPage<T extends ItemBase>(
    // const [item, setItem] = useState<Partial<T>>(originalItem)//修改某些值如texteditor中的值，会导致其它字段值丢失
    const [count, setCount] = useState(0)//用于重新刷新
     const itemRef = useRef<Partial<T>>(originalItem)
-    const checkValidResultsRef = useRef({})
+   // const checkValidResultsRef = useRef({})
     const errMsgsRef = useRef({})
 
 
-    initProps(itemRef.current, fields, checkValidResultsRef.current, errMsgsRef.current)
+    initProps(itemRef.current, fields, errMsgsRef.current)
 
     useEffect(() => {
         document.title = (isAdd ? "新增" : "编辑") + pageProps.name
-        initCheckValidResults(itemRef.current, fields, checkValidResultsRef.current, errMsgsRef.current)
-        return addPasteHandler(fields, originalItem, checkValidResultsRef.current)
+        //initCheckValidResults(itemRef.current, fields, checkValidResultsRef.current, errMsgsRef.current)
+        return addPasteHandler(fields, originalItem)
     }, [])
 
     const saveIfEdited = () => {
@@ -229,17 +199,6 @@ export function CommonItemEditPage<T extends ItemBase>(
         const validateInputs = f7.input.validateInputs("#" + pageProps.id)
         if (f7ProConfig.EnableLog) console.log("validateInputs=" + validateInputs)
 
-
-        //未通过校验检查，则提示出错，阻止保存
-        const invalidKey = getInvalidKey(checkValidResultsRef.current)
-        if (invalidKey) {
-            if (f7ProConfig.EnableLog){
-                console.log("data=" + JSON.stringify(itemRef.current))
-               // console.log("results=" + JSON.stringify(checkValidResults))
-            }
-            f7.dialog.alert(errMsgsRef.current[invalidKey] || "请检查带*的项是否为空，以及是否正确")
-            return
-        }
 
         //使用自定义save
         if (pageProps.saveCallback) {

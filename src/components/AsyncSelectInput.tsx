@@ -11,16 +11,9 @@ import { SelectOption } from "../datatype/SelectOption"
 
 
 /***
- * 由react管理state的受控组件，使用value将其值传递进来；若重置空值，则使用OptionEmptyValue
- * 
- * AsynSelectInput设置选项过程：
- * Step1 接收到的value值，有三种情形：1. 初始状态的空值 2. 修改旧数据时传递过来的非空值 3. 重置后接收到的空值 
- * Step2 内部加载options选项数据完毕后，根据前三种情形重新指定
- * 
- * 对于编辑某一个实例来说，无需父组件二次修改selected状态；但对搜索重置来说，一旦指定了选项，如何从外部（父组件）修改其内部维护的selected状态呢？
- *  方案：onValueChange回调或采用useBus发送消息
+ * 由react管理state的受控组件，异步加载选项
+ * 空值使用"-2"标识
  */
-
 //使用React.FC将会使li标签到ul外面去了
 //  export const AsynSelectInput: React.FC<{
 //     inputProps: ListInputProps, 

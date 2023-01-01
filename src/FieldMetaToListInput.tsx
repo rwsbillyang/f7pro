@@ -30,7 +30,7 @@ export const FieldMetaToListInput = <T extends ItemBase>(e: FieldMeta<T>, i: num
         case 'asyncSelect':
             return AsynSelectInput({ ...e, value: initialValue }, (newValue?: string | number) => {
                 onValueChange(newValue, e)
-            }, e.asyncSelectProps)
+            }, i, e.asyncSelectProps)
 
         case 'datepicker':
             return <ListInput key={i}
