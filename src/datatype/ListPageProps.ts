@@ -8,6 +8,7 @@ export interface ListPageProps<T extends ItemBase> extends PageProps {
     needLoadMore?: boolean //默认为true，是否显示加载更多按钮 
     swipeItemsLeft?: (e: T) => SwipeItem<T>[], //左侧按钮，向右滑动后的按钮项，传入e是因为可以根据值动态改变按钮文字或颜色
     swipeItemsRight?: (e: T) => SwipeItem<T>[], //右侧按钮，向左滑动后的按钮项，传入e是因为可以根据值动态改变按钮文字或颜色
+    topRightPopoverMenuItems?: MenuItem<T>[] //topRight in list page, popover menu items 
 }
 
 
@@ -15,4 +16,9 @@ export interface SwipeItem<T extends ItemBase> {
     name: string, //名称
     color: string, //颜色
     onClick: (e: T)=>void //点击后的动作
+}
+
+export interface MenuItem<T extends ItemBase>{
+    name: string, //名称
+    onClick: (list?: T[])=>void //点击后的动作
 }

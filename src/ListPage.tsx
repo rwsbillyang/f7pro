@@ -1,5 +1,5 @@
 import {
-    Button, f7, Icon, List, ListItem, Navbar, Page, SwipeoutActions,
+    Button, f7, Icon, Link, List, ListItem, Navbar, NavRight, Page, Popover, SwipeoutActions,
     SwipeoutButton, Toolbar
 } from 'framework7-react';
 import React, { useEffect, useRef } from 'react';
@@ -67,11 +67,11 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         initialQuery?: Q,
         listItemSlotViewFunc?: (e: T, pageProps: ListPageProps<T>) => JSX.Element,
         CustomListView?: React.FC<{ list: T[], pageProps: ListPageProps<T> }>,
-        MyNavBar?: React.FC<{ pageProps: ListPageProps<T>}>,
+        MyNavBar?: React.FC<{ pageProps: ListPageProps<T> }>,
         addMax?: number,
         searchFields?: FieldMeta<T>[],
-        ListTopView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>}>,
-        ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>}>
+        ListTopView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T> }>,
+        ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T> }>
     ) {
 
     // let currentQuery: Q = { ...initialQuery } as Q
@@ -149,11 +149,11 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         }
         if (pageProps.swipeItemsLeft) {
             const left = pageProps.swipeItemsLeft(itemValue)
-            if(left.length > 0)
+            if (left.length > 0)
                 leftArry = leftArry.concat(left)
         }
-        
-        const rightArry = pageProps.swipeItemsRight? pageProps.swipeItemsRight(itemValue) : []
+
+        const rightArry = pageProps.swipeItemsRight ? pageProps.swipeItemsRight(itemValue) : []
 
         return <>
             <SwipeoutActions left>
@@ -165,14 +165,16 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
             </SwipeoutActions>
         </>
     }
-    
+
     return <Page name={pageProps.id} id={pageProps.id}
         noNavbar={(!pageProps.hasNavBar && !MyNavBar)}
         stacked={false}
         onPageReinit={pageReInit}
     >
-        {(MyNavBar ? <MyNavBar pageProps={pageProps} />
-            : (pageProps.hasNavBar ? <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} /> : null))}
+        {MyNavBar ? <MyNavBar pageProps={pageProps} />
+            : (pageProps.hasNavBar && <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} >
+                {(pageProps.topRightPopoverMenuItems && pageProps.topRightPopoverMenuItems.length > 0) && <NavRight><Link iconOnly iconF7="gear_alt" popoverOpen="#popover-menu-ops"></Link></NavRight>}
+            </Navbar>)}
 
         {
             (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, () => {
@@ -199,8 +201,8 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                         : <List {...listProps} mediaList>
                             {list?.map((e: T, i: number) => {
                                 return <ListItem key={i} {...mergeListItemPropsFunc(e)} >
-                                    { swipeoutSlotFunc(e, pageProps)}
-                                    { listItemSlotViewFunc && listItemSlotViewFunc(e, pageProps) }
+                                    {swipeoutSlotFunc(e, pageProps)}
+                                    {listItemSlotViewFunc && listItemSlotViewFunc(e, pageProps)}
                                 </ListItem>
                             })}
                             {(pageProps.delApi || pageProps.editPath) && <div slot="after-list" style={{ fontSize: "12px", color: "gray", textAlign: "center" }}>向右滑动列表可编辑或删除 </div>}
@@ -243,7 +245,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                 </>
                 : <NoDataOrErr isLoading={isLoading} isError={isError} errMsg={errMsg} />
         }
-        {ListBottomView && <ListBottomView list={list} pageProps={pageProps}  />}
+        {ListBottomView && <ListBottomView list={list} pageProps={pageProps} />}
         {
             pageProps.editPath &&
             <Toolbar bottom>
@@ -251,6 +253,16 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
                 <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath() : undefined} routeProps={{ isAdd: true }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
                 <Button />
             </Toolbar>
+        }
+        {
+            (!MyNavBar && pageProps.topRightPopoverMenuItems && pageProps.topRightPopoverMenuItems.length > 0) ?
+                <Popover id="popover-menu-ops">
+                    <List>
+                        {
+                            pageProps.topRightPopoverMenuItems.map((e, i) => <ListItem key={i} link popoverClose onClick={() => e.onClick(list)} title={e.name} />)
+                        }
+                    </List>
+                </Popover> : null
         }
 
     </Page >

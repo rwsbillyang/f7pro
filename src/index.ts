@@ -11,7 +11,7 @@ import { BatchOperationParams } from "./datatype/BatchOperationParams";
 import { EditPageProps } from "./datatype/EditPageProps";
 import { FieldMeta } from "./datatype/FieldMeta";
 import { ItemBase, MongoItem, SqlItem } from "./datatype/ItemBase";
-import { ListPageProps, SwipeItem } from "./datatype/ListPageProps";
+import { ListPageProps, MenuItem, SwipeItem } from "./datatype/ListPageProps";
 import { MyAsyncSelectProps } from "./datatype/MyAsyncSelectProps";
 import { OperationCallback } from "./datatype/OperationCallback";
 import { SelectOption, SortOption, selectOptionsValue2Label } from "./datatype/SelectOption";
@@ -28,7 +28,7 @@ export type {
     OperationCallback,
     FieldMeta,
     ItemBase, MongoItem, SqlItem,
-    PageProps,  ListPageProps, EditPageProps, SwipeItem,
+    PageProps,  ListPageProps, EditPageProps, SwipeItem,MenuItem,
     MyAsyncSelectProps,
     SelectOption, SortOption,
     TableCell,

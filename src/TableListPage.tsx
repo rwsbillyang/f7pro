@@ -1,4 +1,4 @@
-import { Block, Button, f7, Icon, Navbar, Page, Toolbar } from 'framework7-react';
+import { Block, Button, f7, Icon, Link, List, ListItem, Navbar, NavRight, Page, Popover, Toolbar } from 'framework7-react';
 import React, { useEffect, useRef } from 'react';
 
 import { Cache, CacheStorage, PaginationQueryBase, StorageType, useCacheList } from "@rwsbillyang/usecache";
@@ -50,7 +50,6 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
     pageProps: ListPageProps<T>,
     header: TableCell<T>[],
     operations?: OperationCallback<T>[],
-    initialValue?: Partial<T>,
     initialQuery?: Q,
     MyNavBar?: React.FC<{ pageProps: ListPageProps<T>, initialValue?: Partial<T> }>,
     addMax?: number,
@@ -112,8 +111,10 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
         stacked={false}
         onPageReinit={pageReInit}
     >
-        {pageProps.hasNavBar && (MyNavBar ? <MyNavBar pageProps={pageProps} initialValue={initialValue} /> : <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} />)}
-
+    {MyNavBar ? <MyNavBar pageProps={pageProps} />
+            : (pageProps.hasNavBar && <Navbar title={pageProps.name} backLink={pageProps.noBackLink ? undefined : f7ProConfig.TextBack} >
+                {(pageProps.topRightPopoverMenuItems && pageProps.topRightPopoverMenuItems.length > 0) && <NavRight><Link iconOnly iconF7="gear_alt" popoverOpen="#popover-menu-ops"></Link></NavRight>}
+            </Navbar>)}
         {
             (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, () => {
                 const p = current.query?.pagination
@@ -131,8 +132,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
                 }
             })
         }
-        {ListTopView && <ListTopView list={list} pageProps={pageProps} initialValue={initialValue} />}
-
+        {ListTopView && <ListTopView list={list} pageProps={pageProps} />}
         {
             (list && list.length > 0) ?
                 <>
@@ -175,15 +175,24 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
                 </>
                 : <NoDataOrErr isLoading={isLoading} isError={isError} errMsg={errMsg} />
         }
-        {ListBottomView && <ListBottomView list={list} pageProps={pageProps} initialValue={initialValue} />}
+        {ListBottomView && <ListBottomView list={list} pageProps={pageProps} />}
         {
             (pageProps.editPath) &&
             <Toolbar bottom>
                 <Button />
-                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath(initialValue || {}) : undefined} routeProps={{ isAdd: "1", item: initialValue }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
+                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath() : undefined} routeProps={{ isAdd: true }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
                 <Button />
             </Toolbar>
         }
-
+ {
+            (!MyNavBar && pageProps.topRightPopoverMenuItems && pageProps.topRightPopoverMenuItems.length > 0) ?
+                <Popover id="popover-menu-ops">
+                    <List>
+                        {
+                            pageProps.topRightPopoverMenuItems.map((e, i) => <ListItem key={i} link popoverClose onClick={() => e.onClick(list)} title={e.name} />)
+                        }
+                    </List>
+                </Popover> : null
+        }
     </Page >
 }
