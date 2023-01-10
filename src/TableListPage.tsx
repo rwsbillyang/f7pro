@@ -72,7 +72,21 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
 
     if (f7ProConfig.EnableLog) console.log("TableListPage: currentQuery=" + JSON.stringify(current.query))
 
-
+    const resetPagination = () => {
+        const p = current.query?.pagination
+        //如果值有改变，则重置lastId
+        if (p) {
+            setIsLoadMore(false)
+            //修改搜索条件后，重置分页，从第一页开始
+            //如果指定了current，且大于0，则优先使用current进行分页
+            if (p.current) {
+                p.current = 1
+                p.lastId = undefined
+            } else {
+                p.lastId = undefined
+            }
+        }
+    }
     //从缓存中刷新
     useBus('refreshList-' + pageProps.id, () => {
         setRefresh()
@@ -82,7 +96,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
     useBus('searchReset', () => {
         if (f7ProConfig.EnableLog) console.log("recv searchReset")
         Cache.evictCache(initalQueryKey, StorageType.OnlySessionStorage)
-
+        resetPagination()
         current.query = { ...initialQuery } as Q
         setUseCache(false)
         setQuery(initialQuery)
@@ -116,21 +130,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
                 {(pageProps.topRightPopoverMenuItems && pageProps.topRightPopoverMenuItems.length > 0) && <NavRight><Link iconOnly iconF7="gear_alt" popoverOpen="#popover-menu-ops"></Link></NavRight>}
             </Navbar>)}
         {
-            (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, () => {
-                const p = current.query?.pagination
-                //如果值有改变，则重置lastId
-                if (p) {
-                    setIsLoadMore(false)
-                    //修改搜索条件后，重置分页，从第一页开始
-                    //如果指定了current，且大于0，则优先使用current进行分页
-                    if (p.current) {
-                        p.current = 1
-                        p.lastId = undefined
-                    } else {
-                        p.lastId = undefined
-                    }
-                }
-            })
+            (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, resetPagination)
         }
         {ListTopView && <ListTopView list={list} pageProps={pageProps} />}
         {

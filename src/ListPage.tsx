@@ -81,6 +81,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     // const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
     // if (v) currentQuery = JSON.parse(v) || initialQuery
     //}
+    
     const { current } = useRef({ query: { ...initialQuery } as Q })
 
     const { isLoading, isError, errMsg, loadMoreState, setQuery, list, refreshCount, setRefresh, setUseCache, setIsLoadMore }
@@ -88,6 +89,21 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
 
     if (f7ProConfig.EnableLog) console.log("CommonListPage: currentQuery=" + JSON.stringify(current.query))
 
+    const resetPagination = () => {
+        const p = current.query?.pagination
+        //如果值有改变，则重置lastId
+        if (p) {
+            setIsLoadMore(false)
+            //修改搜索条件后，重置分页，从第一页开始
+            //如果指定了current，且大于0，则优先使用current进行分页
+            if (p.current) {
+                p.current = 1
+                p.lastId = undefined
+            } else {
+                p.lastId = undefined
+            }
+        }
+    }
     //从缓存中刷新
     useBus('refreshList-' + pageProps.id, () => {
         setRefresh()
@@ -97,11 +113,14 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
     useBus('searchReset', () => {
         if (f7ProConfig.EnableLog) console.log("recv searchReset")
         Cache.evictCache(initalQueryKey, StorageType.OnlySessionStorage)
-
+       
+        resetPagination()
         current.query = { ...initialQuery } as Q
+       
         setUseCache(false)
         setQuery(initialQuery)
     })
+
     useBus('search', () => {
         if (f7ProConfig.EnableLog) console.log("recv search")
 
@@ -177,21 +196,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
             </Navbar>)}
 
         {
-            (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, () => {
-                const p = current.query?.pagination
-                //如果值有改变，则重置lastId
-                if (p) {
-                    setIsLoadMore(false)
-                    //修改搜索条件后，重置分页，从第一页开始
-                    //如果指定了current，且大于0，则优先使用current进行分页
-                    if (p.current) {
-                        p.current = 1
-                        p.lastId = undefined
-                    } else {
-                        p.lastId = undefined
-                    }
-                }
-            })
+            (searchFields && searchFields.length > 0) && SearchView(searchFields, current.query, resetPagination)
         }
         {ListTopView && <ListTopView list={list} pageProps={pageProps} />}
         {

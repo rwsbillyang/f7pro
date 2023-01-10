@@ -33,7 +33,8 @@ import { SelectOption } from "../datatype/SelectOption"
         const [options, setOptions] = useState([loadingOption])
         const [selected, setSelected] = useState(inputProps.value || inputProps.defaultValue || OptionEmptyValue) //AsynSelectInput内部维护的选项值，还有可能外部重新指定了该值（如搜索重置）
         inputProps.defaultValue = undefined //因异步加载，必须使用受控组件，react接管状态管理，去掉其defaultValue属性值
-        
+        if(inputProps.value === undefined) inputProps.value = OptionEmptyValue
+
         useEffect(() => {
             if (asyncProps) fetchCachely(asyncProps)
         }, [])

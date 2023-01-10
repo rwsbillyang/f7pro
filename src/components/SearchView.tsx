@@ -7,8 +7,9 @@ import React, { SyntheticEvent } from 'react';
 import { PaginationQueryBase } from "@rwsbillyang/usecache";
 
 import { dispatch } from 'use-bus';
-import  AsynSelectInput  from './AsyncSelectInput';
+import AsynSelectInput from './AsyncSelectInput';
 
+import { f7ProConfig } from '../Config';
 import { FieldMeta } from '../datatype/FieldMeta';
 import { ItemBase } from "../datatype/ItemBase";
 import { SelectOption, SortOption } from '../datatype/SelectOption';
@@ -35,7 +36,9 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
     searchFields: FieldMeta<T>[],
     queryRef: Q,
     onValueChanged: ()=>void) => {
-
+    
+    if (f7ProConfig.EnableLog) console.log("SearchView: currentQuery=" + JSON.stringify(queryRef))
+      
     const metaToInput = (e: FieldMeta<T>, i: number) => {
         e.required = false
         e.errorMessage = undefined
@@ -77,19 +80,17 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
                         const newValue = target.value
 
                         if (queryRef[e.name] !== newValue) {
-                            console.log("newValue=" + newValue)
+                            if (f7ProConfig.EnableLog) console.log("newValue=" + newValue)
                             queryRef[e.name] = newValue
 
                             //如果值有改变，则重置lastId
                             onValueChanged()
-                            //   setSearchQuery({ ...searchQuery, pagination: pagination }) //使用value值，则需重置state
                         }
                     }}
                 > {e.sortOptions?.map((option: SortOption, i: number) => <option key={i} value={option.pagination?.sKey}>{option.label}</option>)}
                 </ListInput> : null
             default:
-                // if(e.type !== 'select') e.clearButton = true
-
+            
                 return <ListInput key={i}
                     {...e}
                     defaultValue={queryRef[e.name]} //非受控组件，值变更显示由dom控制
@@ -98,7 +99,7 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
                         const newValue = target.value.trim()
 
                         if (queryRef[e.name] !== newValue) {
-                            console.log("newValue=" + newValue)
+                            if (f7ProConfig.EnableLog) console.log("newValue=" + newValue)
                             queryRef[e.name] = newValue
                             
                             //如果值有改变，则重置lastId
@@ -107,7 +108,7 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
                     }}
                     onInputClear={() => {
                         if (queryRef[e.name]) { //第一次点击clear button时只是获取焦点，但此回调也会被回调，故不能使用此判断，或直接去掉clear button
-                            console.log("onInputClear takes effect, searchQuery[e.name] is cleared")
+                            if (f7ProConfig.EnableLog) console.log("onInputClear takes effect, searchQuery[e.name] is cleared")
                             queryRef[e.name] = undefined
 
                             //如果值有改变，则重置lastId
