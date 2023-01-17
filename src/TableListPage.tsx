@@ -15,9 +15,6 @@ import { TableCell } from './datatype/TableCell';
 
 
 
-
-
-
 //批量操作，先选择后批量操作
 export const TableList = <T extends ItemBase>(header: TableCell<T>[], data?: T[], operations?: OperationCallback<T>[]) => {
 
@@ -44,28 +41,38 @@ export const TableList = <T extends ItemBase>(header: TableCell<T>[], data?: T[]
     </table></div>
 }
 
-
-
+/**
+ * 列表页，点击跳转时会附带上item，跳转链接的后面会附带上_id；编辑时也会附带上item，跳转链接中无_id, 新增时会附带上预置的字段值；删除时，delApi后直接添加id
+ * 
+ * @param pageProps Page页面属性，
+ * @param header  表头配置，以及表格中的值是如何从行记录值中获取
+ * @param operations 操作配置
+ * @param initialQuery 列表查询条件 为空则表示未指定
+ * @param searchFields 需要搜索时，传递过来的搜索字段
+ * @param initialValue 当isAdd=true时, 需要向edit page传递的初始值; 其它情况可为空
+ * @param ListTopView 顶部控件，非空则位于listView上方
+ * @param ListBottomView 底部控件，非空则位于listView下方
+ * @param MyNavBar 自定义NavBar，额外的操作菜单
+ * @param addMax 新增次数限制
+ * 
+ * @returns 返回具备LoadMore的列表页面,支持修改或删除后对缓存的刷新
+ */
 export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>(
     pageProps: ListPageProps<T>,
     header: TableCell<T>[],
     operations?: OperationCallback<T>[],
     initialQuery?: Q,
-    MyNavBar?: React.FC<{ pageProps: ListPageProps<T>, initialValue?: Partial<T> }>,
-    addMax?: number,
     searchFields?: FieldMeta<T>[],
+    initialValue?: Partial<T>,
     ListTopView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>, initialValue?: Partial<T> }>,
-    ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>, initialValue?: Partial<T> }>
+    ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>, initialValue?: Partial<T> }>,
+    MyNavBar?: React.FC<{ pageProps: ListPageProps<T>, initialValue?: Partial<T> }>,
+    addMax?: number
 ) => {
-
-    // let currentQuery: Q = { ...initialQuery } as Q
-    //如果指定了存储，则试图从localStorage中加载
-    //if (pageProps.initalQueryKey) {
     const initalQueryKey = pageProps.cacheKey + "/initialQuery"
-    //  const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
-    //  if (v) currentQuery = JSON.parse(v) || initialQuery
-    //}
-    const { current } = useRef({ query: { ...initialQuery } as Q })
+    const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
+    const currentQuery = v? JSON.parse(v) : initialQuery 
+    const { current } = useRef({ query: {...currentQuery} as Q })
 
     const { isLoading, isError, errMsg, loadMoreState, setQuery, refreshCount, list, setRefresh, setUseCache, setIsLoadMore }
         = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, current.query, pageProps.needLoadMore === false ? false : true)
@@ -96,8 +103,8 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
     useBus('searchReset', () => {
         if (f7ProConfig.EnableLog) console.log("recv searchReset")
         Cache.evictCache(initalQueryKey, StorageType.OnlySessionStorage)
-        resetPagination()
         current.query = { ...initialQuery } as Q
+        resetPagination()
         setUseCache(false)
         setQuery(initialQuery)
     })
@@ -180,7 +187,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
             (pageProps.editPath) &&
             <Toolbar bottom>
                 <Button />
-                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath() : undefined} routeProps={{ isAdd: true }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
+                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath() : undefined} routeProps={{ isAdd: true, item: initialValue }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
                 <Button />
             </Toolbar>
         }

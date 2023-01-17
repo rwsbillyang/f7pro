@@ -49,13 +49,15 @@ export function deleteOne<T extends ItemBase>(pageProps: ListPageProps<T>, item?
  * @param listProps  F7的List组件的属性，如指定mediaList
  * @param listItemPropsFunc 用于构建ListItem中的属性，如title， subtitle，after，text，after等
  * @param initialQuery 列表查询条件 为空则表示未指定
- * @param listItemSlotViewFunc 如果ListItem的属性函数listItemPropsFunc不能满足要求，可以使用listItemSlotViewFunc指定slot，还不满足要求，可使用CustomListView
- * @param CustomListView 当<List>以及listItemPropsFunc和listItemSlotViewFunc不能满足要求时，自行提供一个List
- * @param MyNavBar 自定义NavBar，额外的操作菜单
- * @param addMax 新增次数限制
  * @param searchFields 需要搜索时，传递过来的搜索字段
+ * @param listItemSlotViewFunc 如果ListItem的属性函数listItemPropsFunc不能满足要求，可以使用listItemSlotViewFunc指定slot，还不满足要求，可使用CustomListView
+ * @param initialValue 当isAdd=true时, 需要向edit page传递的初始值; 其它情况可为空
+ * @param CustomListView 当<List>以及listItemPropsFunc和listItemSlotViewFunc不能满足要求时，自行提供一个List
  * @param ListTopView 顶部控件，非空则位于listView上方
  * @param ListBottomView 底部控件，非空则位于listView下方
+ * @param MyNavBar 自定义NavBar，额外的操作菜单
+ * @param addMax 新增次数限制
+ * 
  * @returns 返回具备LoadMore的列表页面,支持修改或删除后对缓存的刷新
  */
 //export const CommonListPage: React.FC<{listProps: ListPageProps, titleFunc:(e: T)=>string, initialQuery?: Q}> = ({listProps, titleFunc, initialQuery}) => {
@@ -65,24 +67,20 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         listProps?: ListProps,
         listItemPropsFunc?: (e: T) => ListItemProps,
         initialQuery?: Q,
-        listItemSlotViewFunc?: (e: T, pageProps: ListPageProps<T>) => JSX.Element,
-        CustomListView?: React.FC<{ list: T[], pageProps: ListPageProps<T> }>,
-        MyNavBar?: React.FC<{ pageProps: ListPageProps<T> }>,
-        addMax?: number,
         searchFields?: FieldMeta<T>[],
+        listItemSlotViewFunc?: (e: T, pageProps: ListPageProps<T>) => JSX.Element,
+        initialValue?: Partial<T>,
+        CustomListView?: React.FC<{ list: T[], pageProps: ListPageProps<T> }>,
         ListTopView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T> }>,
-        ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T> }>
+        ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T> }>,
+        MyNavBar?: React.FC<{ pageProps: ListPageProps<T> }>,
+        addMax?: number
     ) {
 
-    // let currentQuery: Q = { ...initialQuery } as Q
-    //如果指定了存储，则试图从localStorage中加载
-    //if (pageProps.initalQueryKey) {
     const initalQueryKey = pageProps.cacheKey + "/initialQuery"
-    // const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
-    // if (v) currentQuery = JSON.parse(v) || initialQuery
-    //}
-    
-    const { current } = useRef({ query: { ...initialQuery } as Q })
+    const v = CacheStorage.getItem(initalQueryKey, StorageType.OnlySessionStorage)
+    const currentQuery = v? JSON.parse(v) : initialQuery 
+    const { current } = useRef({ query: {...currentQuery} as Q })
 
     const { isLoading, isError, errMsg, loadMoreState, setQuery, list, refreshCount, setRefresh, setUseCache, setIsLoadMore }
         = useCacheList<T, Q>(pageProps.listApi, pageProps.cacheKey, current.query, pageProps.needLoadMore === false ? false : true)
@@ -255,7 +253,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
             pageProps.editPath &&
             <Toolbar bottom>
                 <Button />
-                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath() : undefined} routeProps={{ isAdd: true }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
+                <Button large disabled={addMax !== undefined && list && list.length >= addMax} href={pageProps.editPath ? pageProps.editPath() : undefined} routeProps={{ isAdd: true, item: initialValue }}><Icon f7="plus" />{"新增" + pageProps.name}</Button>
                 <Button />
             </Toolbar>
         }
