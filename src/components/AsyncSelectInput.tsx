@@ -20,8 +20,8 @@ import { SelectOption } from "../datatype/SelectOption"
 //     onValueChange: (newValue?: string|number) => void,
 //     asyncProps?: MyAsyncSelectProps
 // }> = (props) => {
-    const AsynSelectInput = (inputProps: ListInputProps, 
-        onValueChange: (newValue?: string|number) => void, key: any,
+    const AsynSelectInput = (inputProps: ListInputProps,  key: number,
+        onValueChange: (newValue?: string|number) => void,
         asyncProps?: MyAsyncSelectProps)  => {
         
        

@@ -44,13 +44,13 @@ function doPaste<T extends ItemBase>(
 }
 
 function addPasteHandler<T extends ItemBase>(
-    fields: FieldMeta<T>[],
+    fields: FieldMeta[],
     item: Partial<T>,
     //checkValidResults: {},
     parentFieldName?: string) {
     const handles: any = []
     for (let i = 0; i < fields.length; i++) {
-        const e: FieldMeta<T> = fields[i]
+        const e: FieldMeta = fields[i]
         if (e.type === "object" && e.objectProps && e.objectProps.length > 0) {
             addPasteHandler(e.objectProps, item[e.name], e.name)
         } else {
@@ -83,9 +83,9 @@ function addPasteHandler<T extends ItemBase>(
  * @param fields 
  * @returns 
  */
-function initProps<T>(itemValue: T, fields: FieldMeta<T>[],  errMsgs: {}, parentFieldName?: string) {
+function initProps<T>(itemValue: T, fields: FieldMeta[],  errMsgs: {}, parentFieldName?: string) {
     for (let i = 0; i < fields.length; i++) {
-        const e: FieldMeta<T> = fields[i]
+        const e: FieldMeta = fields[i]
         if (e.type === "object" && e.objectProps && e.objectProps.length > 0) {
             initProps(itemValue[e.name], e.objectProps, errMsgs, e.name)
         } else {
@@ -167,13 +167,13 @@ function save<T extends ItemBase>(item: Partial<T>, isAdd: boolean, pageProps: E
  */
 export function CommonItemEditPage<T extends ItemBase>(
     pageProps: EditPageProps<T>,
-    fields: FieldMeta<T>[],
+    fields: FieldMeta[],
     originalItem: Partial<T>,
     isAdd: boolean, //从列表页中传递过来的参数
     listProps?: ListProps,
     onSaveSuccess?: (() => void),
-    TopView?: React.FC<{ originalItem?: Partial<T>, pageProps?: EditPageProps<T>, fields?: FieldMeta<T>[] }>,
-    BottomView?: React.FC<{ originalItem?: Partial<T>, pageProps?: EditPageProps<T>, fields?: FieldMeta<T>[] }>
+    TopView?: React.FC<{ originalItem?: Partial<T>, pageProps?: EditPageProps<T>, fields?: FieldMeta[] }>,
+    BottomView?: React.FC<{ originalItem?: Partial<T>, pageProps?: EditPageProps<T>, fields?: FieldMeta[] }>
 ) {
    // const [item, setItem] = useState<Partial<T>>(originalItem)//修改某些值如texteditor中的值，会导致其它字段值丢失
    const [count, setCount] = useState(0)//用于重新刷新
@@ -209,26 +209,24 @@ export function CommonItemEditPage<T extends ItemBase>(
         }
     }
 
-    const onValueChange= (newValue: any, e: FieldMeta<T>, sub?: FieldMeta<T>) => {
+    
+    const onValueChange = (objectMeta: FieldMeta, newValue: any, objectValue: Partial<object>) => {
         if (f7ProConfig.EnableLog) console.log("onValueChange: newValue=" + newValue)
-        
-        const e2 = sub || e 
-        const v = sub ? itemRef.current[e.name][sub.name] : itemRef.current[e.name]
+        //if (f7ProConfig.EnableLog) console.log("FieldMeta="+JSON.stringify(e) )
+        if (f7ProConfig.EnableLog) console.log("old objectValue=" + JSON.stringify(objectValue))
 
-        const initialValue = e2.handleIntialValue ? e2.handleIntialValue(v) : v
+
+        const v = objectValue[objectMeta.name]
+        const initialValue = objectMeta.handleIntialValue ? objectMeta.handleIntialValue(v) : v
         if (newValue !== initialValue) {
             f7.data.dirty = true
-            const v2 = e2.handleChangedValue ? e2.handleChangedValue(newValue) : newValue
-            if(sub){
-                itemRef.current[e.name][sub.name] = v2
-            }else{
-                itemRef.current[e.name] = v2
-            }
-
-            if (f7ProConfig.EnableLog)  console.log("setItemValue: "+ JSON.stringify(itemRef.current))
-            //setItem({ ...item })
-            setCount(count+1)
+            const v2 = objectMeta.handleChangedValue ? objectMeta.handleChangedValue(newValue) : newValue
+            objectValue[objectMeta.name] = v2
         }
+
+        if (f7ProConfig.EnableLog) console.log("new objectValue=" + JSON.stringify(objectValue))
+
+        setCount(count + 1)
     }
 
     if (f7ProConfig.EnableLog) console.log("render EditPage: item=" + JSON.stringify(itemRef.current))
@@ -237,7 +235,7 @@ export function CommonItemEditPage<T extends ItemBase>(
         {pageProps.hasNavBar && <Navbar title={(isAdd ? "新增" : "编辑") + pageProps.name} backLink={f7ProConfig.TextBack} />}
         {TopView && <TopView originalItem={originalItem} pageProps={pageProps} fields={fields} />}
         <List {...listProps}>
-            {fields.map((e, i) => FieldMetaToListInput(e, i, itemRef.current, onValueChange))}
+            {fields.flatMap((e, i) => FieldMetaToListInput(e, i, itemRef.current, onValueChange))}
         </List>
         {BottomView && <BottomView originalItem={originalItem} pageProps={pageProps} fields={fields} />}
         <Toolbar bottom>

@@ -67,7 +67,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
         listProps?: ListProps,
         listItemPropsFunc?: (e: T) => ListItemProps,
         initialQuery?: Q,
-        searchFields?: FieldMeta<T>[],
+        searchFields?: FieldMeta[],
         listItemSlotViewFunc?: (e: T, pageProps: ListPageProps<T>) => JSX.Element,
         initialValue?: Partial<T>,
         CustomListView?: React.FC<{ list: T[], pageProps: ListPageProps<T> }>,
@@ -182,6 +182,8 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
             </SwipeoutActions>
         </>
     }
+
+    
 
     return <Page name={pageProps.id} id={pageProps.id}
         noNavbar={(!pageProps.hasNavBar && !MyNavBar)}

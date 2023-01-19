@@ -4,79 +4,85 @@ import {
 } from 'framework7-react';
 import React, { SyntheticEvent } from 'react';
 import { FieldMeta } from './datatype/FieldMeta';
-import { ItemBase } from './datatype/ItemBase';
 import AsynSelectInput from './components/AsyncSelectInput'
 import { SelectOption } from './datatype/SelectOption';
 
 
-export const FieldMetaToListInput = <T extends ItemBase>(e: FieldMeta<T>, i: number, itemValue: Partial<T>,
-    onValueChange: (newValue: any, e: FieldMeta<T>, sub?: FieldMeta<T>) => void): JSX.Element | null => {
+//因为存在递归调用，子meta不一定就是T extends ItemBase类型
+export const FieldMetaToListInput = (objectMeta: FieldMeta, i: number, objectValue: Partial<object>,
+    onValueChange: (objectMeta: FieldMeta, newValue: any, objectValue: Partial<object>) => void): JSX.Element | (JSX.Element | null)[] | null=> {
 
-    const isDisplay = !e.depend || (e.depend && e.depend(itemValue))
+    const isDisplay = !objectMeta.depend || (objectMeta.depend && objectMeta.depend(objectValue))
     if (!isDisplay) return null
 
-    const initialValue = e.handleIntialValue ? e.handleIntialValue(itemValue[e.name]) : itemValue[e.name]
-    switch (e.type) {
+    const initialValue = objectMeta.handleIntialValue ? objectMeta.handleIntialValue(objectValue[objectMeta.name]) : objectValue[objectMeta.name]
+    switch (objectMeta.type) {
         case "switch":
         case "toggle":
             return <ListItem key={i}>
-                <span>{e.label}</span>
+                <span>{objectMeta.label}</span>
                 <Toggle checked={initialValue || false}
                     onToggleChange={(v: boolean) => {
-                        onValueChange(v, e)
+                        onValueChange(objectMeta, v, objectValue)
                     }} ></Toggle>
             </ListItem>
 
         case 'asyncSelect':
-            return AsynSelectInput({ ...e, value: initialValue }, (newValue?: string | number) => {
-                onValueChange(newValue, e)
-            }, i, e.asyncSelectProps)
+            return AsynSelectInput({ ...objectMeta, value: initialValue }, i, (newValue?: string | number) => {
+                onValueChange(objectMeta, newValue, objectValue)
+            }, objectMeta.asyncSelectProps)
 
         case 'datepicker':
             return <ListInput key={i}
-                {...e}
+                {...objectMeta}
                 value={initialValue || ""}
                 onCalendarChange={(newValue) => {
-                    onValueChange(newValue, e)
+                    onValueChange(objectMeta, newValue, objectValue)
                 }}
             />
         case 'colorpicker':
             return <ListInput key={i}
-                {...e}
+                {...objectMeta}
                 value={initialValue ? { hex: initialValue } : ''}
                 onColorPickerChange={(newValue) => {
-                    onValueChange(newValue.hex, e)
+                    onValueChange(objectMeta, newValue, objectValue)
                 }}
             />
         case 'texteditor':
             return <ListInput key={i}
-                {...e}
+                {...objectMeta}
                 value={initialValue || ""}
                 onTextEditorChange={(newValue) => {
-                    onValueChange(newValue, e)
+                    onValueChange(objectMeta, newValue, objectValue)
                 }}
             />
-        case 'object': //TODO: add ui offset or frame order
-            return (e.objectProps && e.objectProps.length > 0)
-                ? <>{e.objectProps.map((subMeta: FieldMeta<T>, j) => FieldMetaToListInput(subMeta, i * 100 + j, itemValue[e.name] || {},
-                    (newValue: any, e: FieldMeta<T>) => {
-                        onValueChange(newValue, e, subMeta)
-                    }))}</>
-                : null
+        case 'object': //TODO: add ui offset or frame order.  return ListInput array
+            if(objectMeta.objectProps && objectMeta.objectProps.length > 0){
+                if(!objectValue[objectMeta.name]) objectValue[objectMeta.name] = {}
+                return objectMeta.objectProps.flatMap((m2: FieldMeta, j) => FieldMetaToListInput(
+                    m2,  i * 100 + j, objectValue[objectMeta.name], 
+
+                    //m2 and objectValue[objectMeta.name]将作为实参传递过来,参见非object的onValueChange实参来源
+                    (subMeta: FieldMeta, newValue: any, subObjValue: Partial<object>) => {
+                        onValueChange(subMeta, newValue, subObjValue)
+                    }))
+            }else{
+                return null
+            }
 
         default:
             return <ListInput key={i}
-                {...e}
+                {...objectMeta}
                 value={initialValue || ""}
                 onChange={(event: SyntheticEvent) => {
                     const target = event.target as HTMLInputElement
-                    onValueChange(target.value, e)
+                    onValueChange(objectMeta, target.value, objectValue)
                 }}
                 onInputClear={() => {
-                    onValueChange(undefined, e)
+                    onValueChange(objectMeta, undefined, objectValue)
                 }}
             >
-                {e.type === 'select' && e.selectOptions?.map((option: SelectOption, i: number) => <option key={i} value={option.value === undefined ? option.label : option.value}>{option.label}</option>)}
+                {objectMeta.type === 'select' && objectMeta.selectOptions?.map((option: SelectOption, i: number) => <option key={i} value={option.value === undefined ? option.label : option.value}>{option.label}</option>)}
             </ListInput>
     }
 }

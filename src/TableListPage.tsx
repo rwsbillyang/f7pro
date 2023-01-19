@@ -62,7 +62,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
     header: TableCell<T>[],
     operations?: OperationCallback<T>[],
     initialQuery?: Q,
-    searchFields?: FieldMeta<T>[],
+    searchFields?: FieldMeta[],
     initialValue?: Partial<T>,
     ListTopView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>, initialValue?: Partial<T> }>,
     ListBottomView?: React.FC<{ list?: T[], pageProps?: ListPageProps<T>, initialValue?: Partial<T> }>,

@@ -11,12 +11,12 @@
  * with _id as primary key
  */
 export interface MongoItem extends ItemBase{
-    _id: string
+    _id?: string
 }
 
 /**
  * with id as primary key
  */
 export interface SqlItem extends ItemBase{
-    id: string
+    id?: string
 }

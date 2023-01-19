@@ -18,7 +18,7 @@ import { SelectOption, SortOption } from '../datatype/SelectOption';
 //initalQueryShortKey = pageProps.cacheKey+pageProps.initalQueryKey
 //export function useSearchView<T extends ItemBase, Q extends PaginationQueryBase>
 // (
-//     searchKFields: FieldMeta<T>[], 
+//     searchKFields: FieldMeta[], 
 //     setQuery: React.Dispatch<React.SetStateAction<Q | undefined>>,
 //     initalQuery?: Q
 //     )
@@ -33,13 +33,13 @@ import { SelectOption, SortOption } from '../datatype/SelectOption';
  * @returns 
  */
 export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
-    searchFields: FieldMeta<T>[],
+    searchFields: FieldMeta[],
     queryRef: Q,
     onValueChanged: ()=>void) => {
     
     if (f7ProConfig.EnableLog) console.log("SearchView: currentQuery=" + JSON.stringify(queryRef))
       
-    const metaToInput = (e: FieldMeta<T>, i: number) => {
+    const metaToInput = (e: FieldMeta, i: number) => {
         e.required = false
         e.errorMessage = undefined
         //console.log("label="+e.label + ", isDisplay="+isDisplay + ",item="+JSON.stringify(item))
@@ -62,14 +62,14 @@ export const SearchView = <T extends ItemBase, Q extends PaginationQueryBase>(
                         }} ></Toggle>
                 </ListItem>
             case 'asyncSelect':
-                return AsynSelectInput({ ...e, value: queryRef[e.name]},
+                return AsynSelectInput({ ...e, value: queryRef[e.name]}, i,
                     (newValue?: string | number) => {
                         if (queryRef[e.name] !== newValue) {
                             queryRef[e.name] = newValue
                             
                             onValueChanged()
                         }
-                    }, i, e.asyncSelectProps)
+                    }, e.asyncSelectProps)
             case 'sort':
                 e.type = "select"
                 return e.sortOptions ? <ListInput key={i}
