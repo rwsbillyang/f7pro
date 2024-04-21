@@ -22,7 +22,7 @@ npm i f7pro
 ### 1.2.1. 定义
 
 函数定义说明：
-```
+```typescript
 /**
  * 列表页，点击跳转时会附带上item，跳转链接的后面会附带上_id；编辑时也会附带上item，跳转链接中无_id, 新增时会附带上预置的字段值；删除时，delApi后直接添加id
  * 
@@ -55,8 +55,7 @@ export function CommonListPage<T extends ItemBase, Q extends PaginationQueryBase
 ```
 
 定义如下：
-```react
-
+```typescript
 /** 
  * 避免踩坑提示：
  * 0. 所有列表项的值必须有_id或key作为唯一主键，也就是需继承自ItemBase
@@ -99,7 +98,7 @@ export interface SwipeItem<T extends ItemBase> {
 - 提供了editPath，则会列表页底栏，自动增加新增按钮，向右滑动有编辑按钮；新增的初始值由调用CommonListPage(...)时的initialValue传给EditPage，编辑时将列表项值作为参数传给EditPage，EditPage通过item参数接收，同时isAdd在新增时为true。
 
 ### 1.2.2. 基本用法
-```react
+```typescript
 //公众号列表
 export const OaListPage: React.FC = () => {
     
@@ -127,7 +126,7 @@ export const OaListPage: React.FC = () => {
 
 
 ### 1.2.3. 添加滑动按钮
-```react
+```typescript
 swipeItemsRight: [{color: "yellow", name: "同步Agent信息", onClick:(e: AgentConfig)=>{
             fetchWithLoading<number>(
                 () => get(`/api/wx/admin/work/agent/sync/${corpId}/${e.agentId}`),
@@ -140,7 +139,7 @@ swipeItemsLeft表示向左滑动的按钮数组，若添加了editPath和delApi�
 
 
 完整代码如下：
-```react
+```typescript
 export const AgentConfigListPage: React.FC = (props: any) => {
     const corpId  = props.f7route.params.corpId
     const pageProps: ListPageProps<AgentConfig> = {
@@ -180,7 +179,7 @@ export const AgentConfigListPage: React.FC = (props: any) => {
 
 当提供的配置不能满足要求时，可自定义ListView或其它的CardListView
 示例如下：
-```react
+```typescript
 //展示粉丝用户的列表
 const FanListView: React.FC<{ list: Fan[] }> = ({ list }) => {
     //console.log("list="+JSON.stringify(list))
@@ -219,7 +218,7 @@ export const OaFanListPage: React.FC = (props: any) => {
 ### 1.2.5. 自定义NavBar
 
 示例代码：
-```react
+```typescript
 
 //TODO:页面返回时，关闭MyPopover
 const MyNavBar: React.FC<{ pageProps: ListPageProps<MenuTree>, initialValue?: Partial<MenuTree> }> = (props) => <>
@@ -263,7 +262,7 @@ export const OaMenuListPage: React.FC = (props: any) => {
 ### 1.2.6. 多字段搜索
 
 CommonListPage最后一个字段指定了可供搜索的字段
-```react
+```typescript
 
 //搜索条件
 const fields: FieldMeta<Article>[] = [
@@ -337,7 +336,7 @@ export const NewsAdminListPage: React.FC<{ item?: Article }> = (props: any) => {
 ### 1.2.7. 排序选项
 
 
-```react
+```typescript
 export const CustomerListPage = (props: any) => {
     const appId = props.f7route.params.appId
     const shopId = props.f7route.query["shopId"]
@@ -458,7 +457,7 @@ export const CustomerListPage = (props: any) => {
 ```
 ### 1.2.8. 下拉列表框异步加载
 见上例中，指定的asyncSelectProps属性，包含了缓存键，查询url，查询query参数，结果转换函数：
-```react
+```typescript
 {
             name: "productId",
             label: "商品",
@@ -486,7 +485,7 @@ export const CustomerListPage = (props: any) => {
 在自己的List中作为ListInputItem，异步加载：
 
 
-```react
+```typescript
    
                 {AsynSelectInput( { label:"所属", name:"appId", defaultValue: article.appId},
                    (newValue) => {
@@ -507,7 +506,7 @@ export const CustomerListPage = (props: any) => {
 ### 1.2.9. TopCustomView
 
 自定义顶部view
-```react
+```typescript
 ...
 
     const TopPreviewButtons: React.FC<{ list?: Ad[]}> = ({list}) => {
@@ -529,13 +528,13 @@ export const CustomerListPage = (props: any) => {
 
 ### 1.3.1. TableListPage
 与CommonListPage类似，额外添加了两个参数，去除了列表项等参数
-```
+```typescript
 header: TableCell<T>[],
 operations?: OperationCallback<T>[],
 ```
 
 TableListPage声明如下：
-```react
+```typescript
 export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>(
     pageProps: ListPageProps<T>,
     header: TableCell<T>[],
@@ -550,7 +549,7 @@ export const TableListPage = <T extends ItemBase, Q extends PaginationQueryBase>
 
 
 TableCell和OperationCallback定义如下：
-```react
+```typescript
 export interface TableCell<T extends ItemBase> {
     label: string, //表头名称
     className: "label-cell" | "numeric-cell" | "medium-only",
@@ -567,7 +566,7 @@ export interface OperationCallback<T extends ItemBase> {
 
 
 一个表头的示例：
-```react
+```typescript
 
     const header: TableCell<Customer>[] = [
         { label: "姓名", className: "label-cell", cellValue: (e) => e.name },
@@ -585,7 +584,7 @@ export interface OperationCallback<T extends ItemBase> {
 现有列表全部数据
 
 将传递过来的数据进行批量操作，先选择后操作
-```react
+```typescript
 /**
  * 只是对当前的data列表数据进行选择，然后批量操作，不自行加载数据
  * @param header 表头
@@ -603,7 +602,7 @@ export const ListBatchTableCard = <T extends ItemBase>(
 
 
 示例如下：
-```react
+```typescript
     const batchs: BatchCallback<Customer>[] = [
         { label: "批量分派给他人", callback: batchAssignOtherCb },
         { label: "批量分派给自己",  needConfirm: true, confirmTip: "确定批量分派给自己吗？", callback: batchAssignSelf },
@@ -621,7 +620,7 @@ export const ListBatchTableCard = <T extends ItemBase>(
 ```
 
 定义如下：
-```react
+```typescript
 //向后端提交远程操作的参数
 export interface BatchOperationParams{
     ids: string //以 ","分隔的_id
@@ -643,7 +642,7 @@ export interface BatchCallback<T extends ItemBase> {
 ## 1.4. CommonItemEditPage
 
 ### 1.4.1. 定义
-```
+```typescript
 /**
  * 
  * @param pageProps Page的属性
@@ -664,7 +663,7 @@ export function CommonItemEditPage<T extends ItemBase>(
 ```
 
 其中EditPageProps定义如下：
-```react
+```typescript
 export interface EditPageProps<T extends ItemBase> extends PageProps {
     saveApi: string, //请求列表api，如'/api/oa/admin/save'
     saveText?: string //保存按钮文字可以定制
@@ -673,7 +672,7 @@ export interface EditPageProps<T extends ItemBase> extends PageProps {
 ```
 
 FieldMeta扩展了F7中的ListInputProps，定义输入字段元属性
-```react
+```typescript
 export interface FieldMeta<T> extends ListInputProps{
     depend?: (e?: Partial<T>) => boolean; //若指定了依赖：返回true时才显示该项否则不显示，没指定依赖，则都显示
     selectOptions?: SelectOption[]; //额外添加，当type为select时需指定
@@ -696,7 +695,7 @@ export interface FieldMeta<T> extends ListInputProps{
 
 ### 1.4.2. 基本用法
 
-```react
+```typescript
 
 export const OaEditPage: React.FC<{ item: PrefOfficialAccount }> = (props: any) => {
 
@@ -773,7 +772,7 @@ export const OaEditPage: React.FC<{ item: PrefOfficialAccount }> = (props: any) 
 ```
 
 
-```react
+```typescript
 export const AdEditPage: React.FC<{ item: Ad , isAdd: boolean}> = (props: any) => {
     //const corpId = props.f7route.params.corpId
 
@@ -847,7 +846,7 @@ export const AdEditPage: React.FC<{ item: Ad , isAdd: boolean}> = (props: any) =
 当某输入项依赖另一输入项，动态显示或隐藏
 
 使用depend函数，示例如下
-```react
+```typescript
 
 //TODO: 保存新建子菜单后需要单独处理,构建菜单树
 export const OaMenuEditPage: React.FC<{ item: OaMenuItem }> = (props: any) => {
@@ -955,7 +954,7 @@ export const OaMenuEditPage: React.FC<{ item: OaMenuItem }> = (props: any) => {
 ### 1.4.4. TopCustomView
 
 自定义顶部view
-```react
+```typescript
 ...
 
    const TopPreviewButtons: React.FC<{ originalItem?: Partial<SkuBean>}> = ({originalItem}) => {
@@ -978,7 +977,7 @@ export const OaMenuEditPage: React.FC<{ item: OaMenuItem }> = (props: any) => {
 
 ### 1.4.5. sub-object
 
-```react
+```typescript
 
 export interface Msg extends MongoItem{
   appId: string
@@ -999,7 +998,7 @@ export interface Media  extends MsgContent{
 }
 
 
-...
+//...
 
 
 
@@ -1106,7 +1105,7 @@ export interface Media  extends MsgContent{
 
 示例代码：
 
-```react
+```typescript
 export const getFields = (appId: string) => {
     const fieldProps: FieldMeta<OrderInfo>[] = [
         {
@@ -1238,7 +1237,7 @@ TODO
 3. 为空的话列表页将不使用缓存数据，如某些需要重新加载实时更新的页面
 
 
-```react
+```typescript
 export const OaMenuListPage: React.FC = (props: any) => {
     const appId = props.f7route.params.appId
 
@@ -1274,7 +1273,7 @@ sql类型需要指定为id，若是其它唯一键，需另外指定，包括use
 ### 1.6.6. 点击列表项传值
 
 直接通过给listItemPropsFunc指定link参数，将支持点击跳转：
-```react
+```typescript
     const listItemPropsFunc = (e: SkuOutlineBean) => {
         const props: ListItemProps = {
             title: e.name,
@@ -1287,7 +1286,7 @@ sql类型需要指定为id，若是其它唯一键，需另外指定，包括use
     }
 ```
 跳转后的页面通过item接收传递过来的值：
-```
+```typescript
 export const AddComment: React.FC<{ item: SkuOutlineBean }> = ({item}) => {
     console.log("sku="+JSON.stringify(item))
 }
@@ -1296,7 +1295,7 @@ export const AddComment: React.FC<{ item: SkuOutlineBean }> = ({item}) => {
 
 
 若是通过swipeout按钮，可以这样传值：
-```react
+```typescript
 const pageProps: ListPageProps<SkuOutlineBean> = {
         cacheKey: "skuList",
         id: "skuList",//将用于缓存，page的名称和id，如“oaList”
@@ -1312,7 +1311,7 @@ const pageProps: ListPageProps<SkuOutlineBean> = {
 
 留意上面的`f7.views.main.router.navigate({name: "addComment"},{props:{item: e}})`
 不是:`{props: e}`，否则目的接收控件应该为：
-```react
+```typescript
 export const AddComment: React.FC<SkuOutlineBean> = (props) => {
     console.log("sku="+JSON.stringify(props))
 }
@@ -1320,11 +1319,11 @@ export const AddComment: React.FC<SkuOutlineBean> = (props) => {
 
 ### 1.6.7. 下拉列表空项
 由于避免使用非受控组件，可指定
-```
+```typescript
 const NullOption: SelectOption[] = [{value:"-2", label:"请选择"}]
 ```
 在fieldProps中，需添加NullOption，表示未选中任何一项
-```
+```typescript
 {
             name: "nickTag",
             label: "昵称类别",
