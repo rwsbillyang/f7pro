@@ -1,4 +1,12 @@
 # 1. f7pro
+
+Easy to use [Framework7](https://framework7.io/) in react app.
+
+```
+npm i f7pro
+```
+
+
 ## 1.1. Features
 1. 大大减少列表页和编辑页的重复代码；
 2. 简单配置，即可实现增删改查：列表页、加载更多、新增、编辑、删除、保存等功能；
